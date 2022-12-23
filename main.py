@@ -38,6 +38,9 @@ start = time.time()
 mpi = MpiPartition()
 # Set the logger to print debugs
 logger = logging.getLogger(__name__)
+from simsopt.util.mpi import log
+log(level=logging.DEBUG)
+# log(level=logging.INFO)
 # Check if user selected QA or QH when launching main.py
 QAQHselected=False
 if len(sys.argv) > 1:
@@ -52,16 +55,16 @@ finite_beta=False
 ###############
 # Parse the command line arguments and overwrite inputs.py if needed
 parser = argparse.ArgumentParser()
-inputs = recalculate_inputs(parser, QAQHselected, QAorQH, sys.argvs)
+inputs = recalculate_inputs(parser, QAQHselected, QAorQH, sys.argv)
 # Create results folders
 parent_path = str(Path(__file__).parent.resolve())
-current_path = os.path.join(parent_path, f'{inputs.name}')
+current_path = os.path.join(parent_path, 'results', f'{inputs.name}')
 if mpi.proc0_world and inputs.remove_previous_results and os.path.isdir(current_path):
         shutil.copytree(current_path, current_path + '_backup', dirs_exist_ok=True)
         shutil.rmtree(current_path)
 Path(current_path).mkdir(parents=True, exist_ok=True)
 current_path = str(Path(current_path).resolve())
-if mpi.proc0_world: shutil.copy(os.path.join(parent_path,'inputs.py'), os.path.join(current_path,f'{inputs.name}.py'))
+if mpi.proc0_world: shutil.copy(os.path.join(parent_path,'src','inputs.py'), os.path.join(current_path,f'{inputs.name}.py'))
 os.chdir(current_path)
 coils_results_path, vmec_results_path, figures_results_path = create_results_folders(inputs)
 # Write inputs to file f'inputs_{inputs.name}.json'

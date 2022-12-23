@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import pandas as pd
-from auxiliary_functions import pprint
+from .auxiliary_functions import pprint
 import matplotlib.pyplot as plt
 from simsopt.geo import (CurveLength, CurveCurveDistance, MeanSquaredCurvature,
-                        LpCurveCurvature, CurveSurfaceDistance, ArclengthVariation)
+                        LpCurveCurvature, ArclengthVariation)
 from simsopt.objectives import SquaredFlux
 from simsopt.objectives import QuadraticPenalty
 from simsopt.geo import curves_to_vtk
@@ -60,17 +60,17 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
             dict1 = {}
             dict1.update({
                 'Nfeval': info['Nfeval'], 'J':float(J), 'Jf': float(jf),'J_length':float(J_LENGTH.J()),
-                'J_CC':float(J_CC.J()),'J_CS':float(J_CS.J()),'J_CURVATURE':float(J_CURVATURE.J()), 'J_LENGTH_PENALTY': float(J_LENGTH_PENALTY.J()),
+                'J_CC':float(J_CC.J()),'J_CURVATURE':float(J_CURVATURE.J()), 'J_LENGTH_PENALTY': float(J_LENGTH_PENALTY.J()),#,'J_CS':float(J_CS.J())
                 'J_MSC':float(J_MSC.J()), 'J_ALS':float(J_ALS.J()), 'Lengths':float(sum(j.J() for j in Jls)),
                 'curvatures':float(np.sum([np.max(c.kappa()) for c in base_curves])),'msc':float(np.sum([j.J() for j in Jmscs])),
                 'B.n':float(BdotN),
                 #'gradJcoils':float(np.linalg.norm(JF.dJ())),
-                'C-C-Sep':float(Jccdist.shortest_distance()), 'C-S-Sep':float(Jcsdist.shortest_distance())
+                'C-C-Sep':float(Jccdist.shortest_distance())#, 'C-S-Sep':float(Jcsdist.shortest_distance())
             })
             if inputs.debug_coils_outputtxt:
                 # outstr += f", ║∇J coils║={np.linalg.norm(JF.dJ()):.1e}"
-                outstr += f", C-C-Sep={Jccdist.shortest_distance():.2f}, C-S-Sep={Jcsdist.shortest_distance():.2f}"
-                outstr += f" Jf={jf:.1e}, J_length={J_LENGTH.J():.1e}, J_CC={(J_CC.J()):.1e}, J_CS={J_CS.J():.1e}, J_CURVATURE={J_CURVATURE.J():.1e}, J_MSC={J_MSC.J():.1e}, J_ALS={J_ALS.J():.1e}, J_LENGTH_PENALTY={J_LENGTH_PENALTY.J():.1e}"
+                outstr += f", C-C-Sep={Jccdist.shortest_distance():.2f}"#, C-S-Sep={Jcsdist.shortest_distance():.2f}
+                outstr += f" Jf={jf:.1e}, J_length={J_LENGTH.J():.1e}, J_CC={(J_CC.J()):.1e}, J_CURVATURE={J_CURVATURE.J():.1e}, J_MSC={J_MSC.J():.1e}, J_ALS={J_ALS.J():.1e}, J_LENGTH_PENALTY={J_LENGTH_PENALTY.J():.1e}"#, J_CS={J_CS.J():.1e}
                 cl_string = ", ".join([f"{j.J():.1f}" for j in Jls])
                 kap_string = ", ".join(f"{np.max(c.kappa()):.1f}" for c in base_curves)
                 msc_string = ", ".join(f"{j.J():.1f}" for j in Jmscs)
@@ -94,17 +94,18 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
             dict1 = {}
             dict1.update({
                 'Nfeval': info['Nfeval'], 'J':float(J), 'Jf': float(jf),'J_length':float(J_LENGTH.J()),
-                'J_CC':float(J_CC.J()),'J_CS':float(J_CS.J()),'J_CURVATURE':float(J_CURVATURE.J()), 'J_LENGTH_PENALTY': float(J_LENGTH_PENALTY.J()),
+                'J_CC':float(J_CC.J()),'J_CURVATURE':float(J_CURVATURE.J()), 'J_LENGTH_PENALTY': float(J_LENGTH_PENALTY.J()),#,'J_CS':float(J_CS.J())
                 'J_MSC':float(J_MSC.J()), 'J_ALS':float(J_ALS.J()), 'Lengths':float(sum(j.J() for j in Jls)),
                 'curvatures':float(np.sum([np.max(c.kappa()) for c in base_curves])),'msc':float(np.sum([j.J() for j in Jmscs])),
                 'B.n':float(BdotN),
                 # 'gradJcoils':float(np.linalg.norm(JF.dJ())),
-                'C-C-Sep':float(Jccdist.shortest_distance()), 'C-S-Sep':float(Jcsdist.shortest_distance())
+                # 'C-S-Sep':float(Jcsdist.shortest_distance())
+                'C-C-Sep':float(Jccdist.shortest_distance())
             })
             if inputs.debug_coils_outputtxt:
                 # outstr += f", ║∇J coils║={np.linalg.norm(JF.dJ()):.1e}"
-                outstr += f", C-C-Sep={Jccdist.shortest_distance():.2f}, C-S-Sep={Jcsdist.shortest_distance():.2f}"
-                outstr += f" Jf={jf:.1e}, J_length={J_LENGTH.J():.1e}, J_CC={(J_CC.J()):.1e}, J_CS={J_CS.J():.1e}, J_CURVATURE={J_CURVATURE.J():.1e}, J_MSC={J_MSC.J():.1e}, J_ALS={J_ALS.J():.1e}, J_LENGTH_PENALTY={J_LENGTH_PENALTY.J():.1e}"
+                outstr += f", C-C-Sep={Jccdist.shortest_distance():.2f}"#, C-S-Sep={Jcsdist.shortest_distance():.2f}"
+                outstr += f" Jf={jf:.1e}, J_length={J_LENGTH.J():.1e}, J_CC={(J_CC.J()):.1e}, J_CURVATURE={J_CURVATURE.J():.1e}, J_MSC={J_MSC.J():.1e}, J_ALS={J_ALS.J():.1e}, J_LENGTH_PENALTY={J_LENGTH_PENALTY.J():.1e}"#, J_CS={J_CS.J():.1e}
                 cl_string = ", ".join([f"{j.J():.1f}" for j in Jls])
                 kap_string = ", ".join(f"{np.max(c.kappa()):.1f}" for c in base_curves)
                 msc_string = ", ".join(f"{j.J():.1f}" for j in Jmscs)
@@ -131,7 +132,7 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     bs.save(os.path.join(coils_results_path,f"biot_savart_inner_loop_max_mode_{max_mode}.json"))
     df = pd.DataFrame(oustr_dict)
     df.to_csv(f'output_stage2_max_mode_{max_mode}.csv', index_label='index')
-    ax=df.plot(kind='line', logy=True, y=['J','Jf','J_length','J_CC','J_CURVATURE','J_MSC','J_ALS','J_LENGTH_PENALTY','C-C-Sep','C-S-Sep'], linewidth=0.8)
+    ax=df.plot(kind='line', logy=True, y=['J','Jf','J_length','J_CC','J_CURVATURE','J_MSC','J_ALS','J_LENGTH_PENALTY','C-C-Sep'], linewidth=0.8)
     ax.set_ylim(bottom=1e-9, top=None)
     ax.set_xlabel('Number of function evaluations')
     ax.set_ylabel('Objective function')

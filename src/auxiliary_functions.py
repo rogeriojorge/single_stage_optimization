@@ -1,6 +1,5 @@
-
 import os
-import inputs
+from . import inputs
 import numpy as np
 from pathlib import Path
 from math import ceil, sqrt
@@ -83,7 +82,6 @@ def create_initial_coils(base_curves, base_currents, nfp, surf, coils_results_pa
     pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
     surf.to_vtk(os.path.join(coils_results_path, inputs.initial_surface), extra_data=pointData)
     return bs, coils, curves
-
 
 def plot_qfm_poincare(phis, fieldlines_phi_hits, R, Z, OUT_DIR, name):
     if comm is None or comm.rank == 0:

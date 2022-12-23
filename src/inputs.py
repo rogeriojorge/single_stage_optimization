@@ -10,7 +10,7 @@ quasisymmetry_helicity_n_QA = 0 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QA = True # Specify if iota should be added to the objective function
 aspect_ratio_target_QA = 6  # Target aspect ratio
 # QH
-vmec_input_start_QH = 'input.nfp4_QH_warm_start' # VMEC input file that serves as a start for the optimization when there are no previous results
+vmec_input_start_QH = 'input.nfp4_QH' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QH = 12 # Threshold for the sum of coil lengths (each coil is constrained to LENGTHBOUND/ncoils)
 CC_THRESHOLD_QH = 0.06 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QH = 16 # Threshold for the curvature penalty in the objective function
@@ -26,7 +26,7 @@ single_stage = False # Perform a single stage optimization
 order = 9 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
-max_modes = [1, 1, 1, 1, 2, 2, 3] # Fourier mode resolution for the plasma surface
+max_modes = [1] # Fourier mode resolution for the plasma surface
 MAXITER_stage_1 = 200 # Number of iterations to perform in the stage 1 optimization
 MAXITER_stage_2_simple = 30 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
 MAXITER_stage_2 = 200 # Number of iterations to perform in the stage 2 optimization
