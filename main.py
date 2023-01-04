@@ -39,7 +39,7 @@ mpi = MpiPartition()
 # Set the logger to print debugs
 logger = logging.getLogger(__name__)
 from simsopt.util.mpi import log
-log(level=logging.DEBUG)
+# log(level=logging.DEBUG)
 # log(level=logging.INFO)
 # Check if user selected QA or QH when launching main.py
 QAQHselected=False
@@ -71,6 +71,9 @@ coils_results_path, vmec_results_path, figures_results_path = create_results_fol
 inputs_dict = dict([(att, getattr(inputs,att)) for att in dir(inputs) if '__' not in att])
 with open(os.path.join(current_path, f'inputs_{inputs.name}.json'), 'w', encoding='utf-8') as f:
     json.dump(inputs_dict, f, ensure_ascii=False, indent=4)
+# If the user did not specify the stage, do single stage by default
+if (not inputs.stage_1) and (not inputs.stage_2) and (not inputs.single_stage):
+    inputs.single_stage = True
 ######################################################
 pprint("============================================")
 pprint("Starting single stage optimization")

@@ -27,22 +27,21 @@ order = 9 # Number of Fourier modes describing each Cartesian component of each 
 ## General input parameters
 # Frequent use
 max_modes = [1] # Fourier mode resolution for the plasma surface
-MAXITER_stage_1 = 200 # Number of iterations to perform in the stage 1 optimization
-MAXITER_stage_2_simple = 30 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
-MAXITER_stage_2 = 200 # Number of iterations to perform in the stage 2 optimization
-MAXITER_single_stage = 200 # Number of iterations to perform in the main optimization loop
+MAXITER_stage_1 = 10 # Number of iterations to perform in the stage 1 optimization
+MAXITER_stage_2_simple = 5 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
+MAXITER_stage_2 = 5 # Number of iterations to perform in the stage 2 optimization
+MAXITER_single_stage = 5 # Number of iterations to perform in the main optimization loop
 # Flags
 remove_previous_results = True # If exists, move folder with the same name to a backup place
 remove_previous_debug_output = False # Chose if previous debug_output_file should be deleted
-coil_gradients_analytical = True
 vmec_verbose = False # Print vmec output if True
 create_wout_final = True # Create a VMEC wout file entitled "final"
 vmec_plot_result = True # Plot the optimized VMEC result
-find_QFM_surface = True # Find QFM surface and resulting VMEC equilibrium
-vmec_plot_QFM_result = True # Plot the found QFM equilibrium
-create_Poincare_plot = True # Create Poincare plot from coils
-booz_xform_plot_result = True
-booz_xform_plot_QFM_result = True
+find_QFM_surface = False # Find QFM surface and resulting VMEC equilibrium
+vmec_plot_QFM_result = False # Plot the found QFM equilibrium
+create_Poincare_plot = False # Create Poincare plot from coils
+booz_xform_plot_result = False
+booz_xform_plot_QFM_result = False
 debug_coils_outputtxt = True
 # Diagnostics for coils and plasma
 boozxform_nsurfaces = 14

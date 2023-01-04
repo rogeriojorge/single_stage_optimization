@@ -1,0 +1,7 @@
+matplotlib
+mpi4py
+numpy
+pandas
+scipy
+simsopt
+booz_xform
