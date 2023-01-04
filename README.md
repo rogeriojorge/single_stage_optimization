@@ -26,3 +26,8 @@ The input parameters are sent via the command line.
 - Quasisymmetry flavour: choose `./main.py QA` or `./main.py QH` to use QA or QH vmec input file. If not present, defaults to QA
 - Stage: add --stage1, --stage2 or --single_stage when running `main.py` to select which optimization stage to use
 - All other inputs can be seen in file `src/inputs.py`. Their default values can be changed in the input terminal
+
+# Simulation results
+The output of the code is stored in a folder called results.
+
+To see live the results of the optimization check the file `output.txt` with, for example, `tail -f output.txt`.
