@@ -173,30 +173,21 @@ class single_stage_obj_and_der():
                 B = bs.B().reshape((inputs.nphi, inputs.ntheta, 3))
                 dB_by_dX = bs.dB_by_dX().reshape((inputs.nphi, inputs.ntheta, 3, 3))
                 Bcoil = bs.B().reshape(n.shape)
+                unitn = n * (1./absn)[:, :, None]
+                Bcoil_n = np.sum(Bcoil*unitn, axis=2)
+                mod_Bcoil = np.linalg.norm(Bcoil, axis=2)
+                B_n = Bcoil_n
+                B_diff = Bcoil
                 B_N = np.sum(Bcoil * n, axis=2)
-                dJdx = (B_N/absn)[:, :, None] * (np.sum(dB_by_dX*n[:, :, None, :], axis=3))
-                dJdN = (B_N/absn)[:, :, None] * B - 0.5 * (B_N**2/absn**3)[:, :, None] * n
-                deriv = surf.dnormal_by_dcoeff_vjp(dJdN/(inputs.nphi*inputs.ntheta)) + surf.dgamma_by_dcoeff_vjp(dJdx/(inputs.nphi*inputs.ntheta))
+                assert Jf.local
+                dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
+                dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
+                deriv = surf.dnormal_by_dcoeff_vjp(dJdN/(inputs.nphi*inputs.ntheta)) + surf.dgamma_by_dcoeff_vjp(dJdx/(nphi_VMEC*ntheta_VMEC))
                 mixed_dJ = Derivative({surf: deriv})(surf)
                 ## Put both gradients together
                 grad_with_respect_to_coils = inputs.coils_objective_weight * coils_dJ
                 grad_with_respect_to_surface = np.ravel(prob_dJ) + inputs.coils_objective_weight * mixed_dJ
             else:
-                # Finite difference for the coil gradients
-                # grad_coils = np.zeros(len(dofs),)
-                # steps = finite_difference_steps(dofs, abs_step=inputs.finite_difference_abs_step, rel_step=inputs.finite_difference_rel_step)
-                # f0 = inputs.coils_objective_weight * JF.J()
-                # for j in range(len(dofs)):
-                #     x = np.copy(dofs)
-                #     x[j] = dofs[j] + steps[j]
-                #     JF.x = x[:-number_vmec_dofs]
-                #     if np.sum(prob.x-x[-number_vmec_dofs:])!=0:
-                #         prob.x = x[-number_vmec_dofs:]
-                #     bs.set_points(surf.gamma().reshape((-1, 3)))
-                #     fplus = inputs.coils_objective_weight * JF.J()
-                #     grad_coils[j] = (fplus - f0) / steps[j]
-                # grad_with_respect_to_coils = grad_coils[:-number_vmec_dofs]
-                # grad_with_respect_to_surface = np.ravel(prob_dJ) + grad_coils[-number_vmec_dofs:]
                 pprint('Finite beta needs to be implemented')
                 exit()
             grad = np.concatenate((grad_with_respect_to_coils, grad_with_respect_to_surface))
