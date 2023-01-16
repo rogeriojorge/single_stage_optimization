@@ -38,7 +38,7 @@ start = time.time()
 mpi = MpiPartition()
 # Set the logger to print debugs
 logger = logging.getLogger(__name__)
-from simsopt.util.mpi import log
+# from simsopt.util.mpi import log
 # log(level=logging.DEBUG)
 # log(level=logging.INFO)
 # Check if user selected QA or QH when launching main.py
@@ -50,8 +50,6 @@ if len(sys.argv) > 1:
 if not QAQHselected:
     pprint('First line argument (QA or QH) not selected. Defaulting to QA.')
     QAorQH = 'QA'
-###############
-finite_beta=False
 ###############
 # Parse the command line arguments and overwrite inputs.py if needed
 parser = argparse.ArgumentParser()
@@ -88,8 +86,14 @@ else:
     vmec_input_files.sort(key=lambda item: (len(item), item), reverse=False)
     vmec_input_filename = vmec_input_files[-1]
 pprint(f' Using vmec input file {os.path.join(vmec_results_path,vmec_input_filename)}')
-vmec = Vmec(os.path.join(vmec_results_path,vmec_input_filename), mpi=mpi, verbose=inputs.vmec_verbose, nphi=inputs.nphi, ntheta=inputs.ntheta)
+if inputs.use_half_period:
+    vmec = Vmec(os.path.join(vmec_results_path,vmec_input_filename), mpi=mpi, verbose=inputs.vmec_verbose, nphi=inputs.nphi, ntheta=inputs.ntheta, range_surface='half period')
+    vmec_full_boundary = Vmec(os.path.join(vmec_results_path,vmec_input_filename), mpi=mpi, verbose=inputs.vmec_verbose, nphi=inputs.nphi, ntheta=inputs.ntheta)
+else:
+    vmec = Vmec(os.path.join(vmec_results_path,vmec_input_filename), mpi=mpi, verbose=inputs.vmec_verbose, nphi=inputs.nphi, ntheta=inputs.ntheta)
+    vmec_full_boundary = vmec
 surf = vmec.boundary
+surf_full_boundary = vmec_full_boundary.boundary
 # Check if there are already optimized coils we can use
 bs_json_files = [file for file in os.listdir(coils_results_path) if '.json' in file]
 if len(bs_json_files)==0:
@@ -100,8 +104,8 @@ else:
     base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
     base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
 # Create the initial coils
-base_currents[0].fix_all() # Is this really needed?
-bs, coils, curves = create_initial_coils(base_curves, base_currents, vmec.indata.nfp, surf, coils_results_path, inputs)
+base_currents[0].fix_all()
+bs, coils, curves = create_initial_coils(base_curves, base_currents, vmec.indata.nfp, surf_full_boundary, coils_results_path, inputs)
 ################################################################
 ######### DEFINE OBJECTIVE FUNCTION AND ITS DERIVATIVES ########
 ################################################################
@@ -160,7 +164,7 @@ class single_stage_obj_and_der():
             ## Finite differences for the first-stage objective function
             prob_dJ = prob_jacobian.jac(prob.x)
 
-            if not finite_beta:#inputs.coil_gradients_analytical:
+            if not inputs.finite_beta:
                 ## Finite differences for the second-stage objective function
                 coils_dJ = JF.dJ()
                 ## Mixed term - derivative of squared flux with respect to the surface shape
@@ -205,7 +209,8 @@ class single_stage_obj_and_der():
         oustr_dict.append(dict1)
         if np.mod(info['Nfeval'],5)==0:
             pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
-            surf.to_vtk(os.path.join(coils_results_path,f"surf_intermediate_max_mode_{max_mode}_{info['Nfeval']}"), extra_data=pointData)
+            surf_full_boundary.x = surf.x
+            surf_full_boundary.to_vtk(os.path.join(coils_results_path,f"surf_intermediate_max_mode_{max_mode}_{info['Nfeval']}"), extra_data=pointData)
             curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_intermediate_max_mode_{max_mode}_{info['Nfeval']}"))
         return J, grad
 # Loop over the number of predefined maximum poloidal/toroidal modes
@@ -216,7 +221,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         if max_mode != previous_max_mode: oustr_dict_inner=[]
         pprint(f' Starting optimization with max_mode={max_mode}')
         pprint(f'  Forming stage 1 objective function')
-        surf, vmec, qs, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, surf, max_mode, inputs)
+        vmec, vmec_full_boundary, surf, surf_full_boundary, qs, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
         pprint(f'  Forming stage 2 objective function')
         JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, \
             J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY = form_stage_2_objective_function(surf, bs, base_curves, curves, inputs)
@@ -284,7 +289,8 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(e)
         if mpi.proc0_world:
             pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
-            surf.to_vtk(os.path.join(coils_results_path,inputs.resulting_surface+'max_mode_'+str(max_mode)), extra_data=pointData)
+            surf_full_boundary.x = surf.x
+            surf_full_boundary.to_vtk(os.path.join(coils_results_path,inputs.resulting_surface+'max_mode_'+str(max_mode)), extra_data=pointData)
             curves_to_vtk(curves, os.path.join(coils_results_path,inputs.resulting_coils+'max_mode_'+str(max_mode)))
             bs.save(os.path.join(coils_results_path,inputs.resulting_field_json+'max_mode_'+str(max_mode)+'.json'))
             vmec.write_input(os.path.join(vmec_results_path, f'input.{inputs.name}_maxmode{max_mode}'))
@@ -319,7 +325,8 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         oustr_dict_outer.append(oustr_dict_inner)
     if mpi.proc0_world:
         pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
-        surf.to_vtk(os.path.join(coils_results_path,inputs.resulting_surface), extra_data=pointData)
+        surf_full_boundary.x = surf.x
+        surf_full_boundary.to_vtk(os.path.join(coils_results_path,inputs.resulting_surface), extra_data=pointData)
         curves_to_vtk(curves, os.path.join(coils_results_path,inputs.resulting_coils))
         bs.save(os.path.join(coils_results_path,inputs.resulting_field_json))
         vmec.write_input(os.path.join(current_path, f'input.{inputs.name}_final'))

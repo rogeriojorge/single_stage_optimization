@@ -1,7 +1,9 @@
 ## Inputs Parameters overwritten with command line arguments
+use_half_period = True # If not optimizing a CNT-like stellarator, set this to True for efficiency
+finite_beta = False # finite beta optimization not implemented yet
 # QA
 vmec_input_start_QA = 'input.nfp2_QA' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QA = 20 # Threshold for the coil length (each coil is constrained to LENGTHBOUND/ncoils)
+LENGTHBOUND_QA = 18 # Threshold for the coil length (each coil is constrained to LENGTHBOUND/ncoils)
 CC_THRESHOLD_QA = 0.1 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QA = 5 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QA = 5 # Threshold for the mean squared curvature penalty in the objective function
@@ -23,7 +25,7 @@ aspect_ratio_target_QH = 7  # Target aspect ratio
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
 single_stage = False # Perform a single stage optimization
-order = 9 # Number of Fourier modes describing each Cartesian component of each coil
+order = 16 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
 max_modes = [1] # Fourier mode resolution for the plasma surface
@@ -69,12 +71,12 @@ iota_weight = 1 # Weight for the rotational transform objective
 finite_difference_rel_step = 1e-5 # Relative step size for the stage 1 finite difference
 finite_difference_abs_step = 1e-7 # Absolute step size for the stage 1 finite difference
 # Stage 2 optimization parameters
-coils_objective_weight = 6e+2 # Scale of stage 2 objective with respect to stage 1 objective
+coils_objective_weight = 1e+3 # Scale of stage 2 objective with respect to stage 1 objective
 R0 = 1.0 # Major radius for the initial circular coils
 R1 = 0.5 # Minor radius for the initial circular coils
 initial_current = 1e5 # Initial current for all coils
-nphi = 180 # Toroidal resolution for the Biot-Savart magnetic field
-ntheta = 55 # Poloidal resolution for the Biot-Savart magnetic field
+nphi = 50 # Toroidal resolution for the Biot-Savart magnetic field
+ntheta = 30 # Poloidal resolution for the Biot-Savart magnetic field
 LENGTH_CON_WEIGHT = 0.01 # Weight on the quadratic penalty for the curve length
 LENGTH_WEIGHT = 1e-7 # Weight on the curve lengths in the objective function
 CC_WEIGHT = 5e-2 # Weight for the coil-to-coil distance penalty in the objective function

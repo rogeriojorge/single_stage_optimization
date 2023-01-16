@@ -21,6 +21,8 @@ except ImportError:
 
 # Recalculate input parameters from command line arguments
 def recalculate_inputs(parser, QAQHselected, QAorQH, sysargv):
+    parser.add_argument("--use_half_period", dest="use_half_period", default=inputs.use_half_period, action="store_true")
+    parser.add_argument("--finite_beta", dest="finite_beta", default=inputs.finite_beta, action="store_true")
     parser.add_argument("--vmec_input_start", default=inputs.vmec_input_start_QA if QAorQH=='QA' else inputs.vmec_input_start_QH)
     parser.add_argument("--lengthbound", type=float, default=inputs.LENGTHBOUND_QA if QAorQH=='QA' else inputs.LENGTHBOUND_QH)
     parser.add_argument("--cc_threshold", type=float, default=inputs.CC_THRESHOLD_QA if QAorQH=='QA' else inputs.CC_THRESHOLD_QH)
@@ -34,10 +36,10 @@ def recalculate_inputs(parser, QAQHselected, QAorQH, sysargv):
     parser.add_argument("--stage2", dest="stage2", default=inputs.stage_2, action="store_true")
     parser.add_argument("--single_stage", dest="single_stage", default=inputs.single_stage, action="store_true")
     parser.add_argument("--include_iota_target", dest="include_iota_target", default=inputs.include_iota_target_QA if QAorQH=='QA' else inputs.include_iota_target_QH, action="store_true")
-    if QAQHselected:
-        args = parser.parse_args(sysargv[2:])
-    else:
-        args = parser.parse_args()
+    if QAQHselected: args = parser.parse_args(sysargv[2:])
+    else: args = parser.parse_args()
+    inputs.use_half_period = args.use_half_period
+    inputs.finite_beta = args.finite_beta
     inputs.order = args.order
     inputs.ncoils = args.ncoils
     inputs.LENGTHBOUND = args.lengthbound
@@ -67,10 +69,8 @@ def create_results_folders(inputs):
     Path(inputs.figures_folder).mkdir(parents=True, exist_ok=True)
     figures_results_path = str(Path(inputs.figures_folder).resolve())
     if inputs.remove_previous_debug_output and inputs.single_stage:
-        try:
-            os.remove(inputs.debug_output_file)
-        except OSError:
-            pass
+        try: os.remove(inputs.debug_output_file)
+        except OSError: pass
     return coils_results_path, vmec_results_path, figures_results_path
 
 def create_initial_coils(base_curves, base_currents, nfp, surf, coils_results_path, inputs):
