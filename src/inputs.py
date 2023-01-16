@@ -82,9 +82,9 @@ LENGTH_WEIGHT = 1e-7 # Weight on the curve lengths in the objective function
 CC_WEIGHT = 5e-2 # Weight for the coil-to-coil distance penalty in the objective function
 CS_THRESHOLD = 0.3 # Threshold for the coil-to-surface distance penalty in the objective function
 CS_WEIGHT = 3e-1 # Weight for the coil-to-surface distance penalty in the objective function
-CURVATURE_WEIGHT = 5e-8 # Weight for the curvature penalty in the objective function
-MSC_WEIGHT = 5e-9 # Weight for the mean squared curvature penalty in the objective function
-ARCLENGTH_WEIGHT = 1e-9 # Weight for the arclength variation penalty in the objective function
+CURVATURE_WEIGHT = 1e-4 # Weight for the curvature penalty in the objective function
+MSC_WEIGHT = 1e-4 # Weight for the mean squared curvature penalty in the objective function
+ARCLENGTH_WEIGHT = 1e-8 # Weight for the arclength variation penalty in the objective function
 # Files and Folders
 executables_folder = "executables" # Directory where VMEC, BOOZ_XFORM, NEO executables are stored
 plotting_folder = "plotting" # Directory where the figures will be stored
