@@ -58,9 +58,9 @@ inputs = recalculate_inputs(parser, QAQHselected, QAorQH, sys.argv)
 parent_path = str(Path(__file__).parent.resolve())
 current_path = os.path.join(parent_path, 'results', f'{inputs.name}')
 if mpi.proc0_world and inputs.remove_previous_results and os.path.isdir(current_path):
-        shutil.copytree(current_path, current_path + '_backup', dirs_exist_ok=True)
-        shutil.rmtree(current_path)
-Path(current_path).mkdir(parents=True, exist_ok=True)
+    shutil.copytree(current_path, current_path + '_backup', dirs_exist_ok=True)
+    shutil.rmtree(current_path)
+    Path(current_path).mkdir(parents=True, exist_ok=True)
 current_path = str(Path(current_path).resolve())
 if mpi.proc0_world: shutil.copy(os.path.join(parent_path,'src','inputs.py'), os.path.join(current_path,f'{inputs.name}.py'))
 os.chdir(current_path)
@@ -105,7 +105,7 @@ else:
     base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
 # Create the initial coils
 base_currents[0].fix_all()
-bs, coils, curves = create_initial_coils(base_curves, base_currents, vmec.indata.nfp, surf_full_boundary, coils_results_path, inputs)
+bs, coils, curves = create_initial_coils(base_curves, base_currents, vmec.indata.nfp, surf_full_boundary, coils_results_path, inputs, mpi)
 ################################################################
 ######### DEFINE OBJECTIVE FUNCTION AND ITS DERIVATIVES ########
 ################################################################
@@ -182,7 +182,7 @@ class single_stage_obj_and_der():
                 assert Jf.local
                 dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
                 dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
-                deriv = surf.dnormal_by_dcoeff_vjp(dJdN/(inputs.nphi*inputs.ntheta)) + surf.dgamma_by_dcoeff_vjp(dJdx/(nphi_VMEC*ntheta_VMEC))
+                deriv = surf.dnormal_by_dcoeff_vjp(dJdN/(inputs.nphi*inputs.ntheta)) + surf.dgamma_by_dcoeff_vjp(dJdx/(inputs.nphi*inputs.ntheta))
                 mixed_dJ = Derivative({surf: deriv})(surf)
                 ## Put both gradients together
                 grad_with_respect_to_coils = inputs.coils_objective_weight * coils_dJ
@@ -220,7 +220,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         if inputs.stage_1:
             os.chdir(vmec_results_path)
             pprint(f'  Performing Stage 1 optimization with {inputs.MAXITER_stage_1} iterations')
-            least_squares_mpi_solve(prob, mpi, grad=True, rel_step=1e-5, abs_step=1e-8, max_nfev=inputs.MAXITER_stage_1)
+            least_squares_mpi_solve(prob, mpi, grad=True, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, max_nfev=inputs.MAXITER_stage_1)
             os.chdir(current_path)
             if mpi.proc0_world:
                 with open(inputs.debug_output_file, "a") as myfile:

@@ -68,8 +68,8 @@ quasisymmetry_weight = 1 # Weight for the quasisymmetry residuals objective
 quasisymmetry_helicity_m = 1 # Poloidal quasisymmetry integer M in |B|
 iota_target = 0.42 # Target rotational transform iota
 iota_weight = 1 # Weight for the rotational transform objective
-finite_difference_rel_step = 1e-5 # Relative step size for the stage 1 finite difference
-finite_difference_abs_step = 1e-7 # Absolute step size for the stage 1 finite difference
+finite_difference_rel_step = 1e-3 # Relative step size for the stage 1 finite difference
+finite_difference_abs_step = 1e-5 # Absolute step size for the stage 1 finite difference
 # Stage 2 optimization parameters
 coils_objective_weight = 1e+3 # Scale of stage 2 objective with respect to stage 1 objective
 R0 = 1.0 # Major radius for the initial circular coils

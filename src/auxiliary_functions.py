@@ -81,14 +81,15 @@ def create_results_folders(inputs):
         except OSError: pass
     return coils_results_path, vmec_results_path, figures_results_path
 
-def create_initial_coils(base_curves, base_currents, nfp, surf, coils_results_path, inputs):
+def create_initial_coils(base_curves, base_currents, nfp, surf, coils_results_path, inputs, mpi):
     coils = coils_via_symmetries(base_curves, base_currents, nfp, True)
     bs = BiotSavart(coils)
     bs.set_points(surf.gamma().reshape((-1, 3)))
     curves = [c.curve for c in coils]
-    curves_to_vtk(curves, os.path.join(coils_results_path, inputs.initial_coils))
-    pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
-    surf.to_vtk(os.path.join(coils_results_path, inputs.initial_surface), extra_data=pointData)
+    if mpi.proc0_world:
+        curves_to_vtk(curves, os.path.join(coils_results_path, inputs.initial_coils))
+        pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
+        surf.to_vtk(os.path.join(coils_results_path, inputs.initial_surface), extra_data=pointData)
     return bs, coils, curves
 
 def plot_qfm_poincare(phis, fieldlines_phi_hits, R, Z, OUT_DIR, name):
