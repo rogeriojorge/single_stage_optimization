@@ -40,9 +40,11 @@ def recalculate_inputs(parser, QAQHselected, QAorQH, sysargv):
     parser.add_argument("--stage2", dest="stage2", default=inputs.stage_2, action="store_true")
     parser.add_argument("--single_stage", dest="single_stage", default=inputs.single_stage, action="store_true")
     parser.add_argument("--include_iota_target", dest="include_iota_target", default=inputs.include_iota_target_QA if QAorQH=='QA' else inputs.include_iota_target_QH, action="store_true")
+    parser.add_argument('--max_modes', nargs='+',dest="max_modes", default=inputs.max_modes, type=int)
     if QAQHselected: args = parser.parse_args(sysargv[2:])
     else: args = parser.parse_args()
     inputs.use_half_period = args.use_half_period
+    inputs.max_modes = args.max_modes
     inputs.finite_beta = args.finite_beta
     inputs.order = args.order
     inputs.MAXITER_stage_1 = args.MAXITER_stage_1
