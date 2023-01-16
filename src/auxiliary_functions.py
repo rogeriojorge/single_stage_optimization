@@ -30,6 +30,10 @@ def recalculate_inputs(parser, QAQHselected, QAorQH, sysargv):
     parser.add_argument("--curvature_threshold", type=float, default=inputs.CURVATURE_THRESHOLD_QA if QAorQH=='QA' else inputs.CURVATURE_THRESHOLD_QH)
     parser.add_argument("--ncoils", type=float, default=inputs.ncoils_QA if QAorQH=='QA' else inputs.ncoils_QH)
     parser.add_argument("--order", type=float, default=inputs.order)
+    parser.add_argument("--MAXITER_stage_1", type=float, default=inputs.MAXITER_stage_1)
+    parser.add_argument("--MAXITER_stage_2_simple", type=float, default=inputs.MAXITER_stage_2_simple)
+    parser.add_argument("--MAXITER_stage_2", type=float, default=inputs.MAXITER_stage_2)
+    parser.add_argument("--MAXITER_single_stage", type=float, default=inputs.MAXITER_single_stage)
     parser.add_argument("--quasisymmetry_helicity_n", type=float, default=inputs.quasisymmetry_helicity_n_QA if QAorQH=='QA' else inputs.quasisymmetry_helicity_n_QH)
     parser.add_argument("--aspect_ratio_target", type=float, default=inputs.aspect_ratio_target_QA if QAorQH=='QA' else inputs.aspect_ratio_target_QH)
     parser.add_argument("--stage1", dest="stage1", default=inputs.stage_1, action="store_true")
@@ -41,6 +45,10 @@ def recalculate_inputs(parser, QAQHselected, QAorQH, sysargv):
     inputs.use_half_period = args.use_half_period
     inputs.finite_beta = args.finite_beta
     inputs.order = args.order
+    inputs.MAXITER_stage_1 = args.MAXITER_stage_1
+    inputs.MAXITER_stage_2_simple = args.MAXITER_stage_2_simple
+    inputs.MAXITER_stage_2 = args.MAXITER_stage_2
+    inputs.MAXITER_single_stage = args.MAXITER_single_stage
     inputs.ncoils = args.ncoils
     inputs.LENGTHBOUND = args.lengthbound
     inputs.CC_THRESHOLD = args.cc_threshold
