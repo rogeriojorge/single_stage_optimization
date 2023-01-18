@@ -6,6 +6,12 @@ threed1*
 parvmecinfo*
 fort.9
 *.pdf
+*.png
+residuals*
+objective*
+*000_*
+*before_inner_loop*
+*after_inner_loop*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
