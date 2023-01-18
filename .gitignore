@@ -1,3 +1,12 @@
+# Manually added
+jac_log*
+curves_intermediate*
+surf_intermediate*
+threed1*
+parvmecinfo*
+fort.9
+*.pdf
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

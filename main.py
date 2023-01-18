@@ -60,10 +60,10 @@ current_path = os.path.join(parent_path, 'results', f'{inputs.name}')
 if mpi.proc0_world and inputs.remove_previous_results and os.path.isdir(current_path):
     shutil.copytree(current_path, current_path + '_backup', dirs_exist_ok=True)
     shutil.rmtree(current_path)
-    Path(current_path).mkdir(parents=True, exist_ok=True)
+if mpi.proc0_world: Path(current_path).mkdir(parents=True, exist_ok=True)
 current_path = str(Path(current_path).resolve())
 if mpi.proc0_world: shutil.copy(os.path.join(parent_path,'src','inputs.py'), os.path.join(current_path,f'{inputs.name}.py'))
-os.chdir(current_path)
+time.sleep(0.1);os.chdir(current_path)
 coils_results_path, vmec_results_path, figures_results_path = create_results_folders(inputs)
 # Write inputs to file f'inputs_{inputs.name}.json'
 inputs_dict = dict([(att, getattr(inputs,att)) for att in dir(inputs) if '__' not in att])
@@ -79,7 +79,9 @@ pprint("============================================")
 ######################################################
 # Check if a previous optimization has already taken place and load it if exists
 vmec_files_list = os.listdir(vmec_results_path)
-if len(vmec_files_list)==0:
+if os.path.exists(os.path.join(current_path, f'input.{inputs.name}_final')):
+    vmec_input_filename = os.path.join(current_path, f'input.{inputs.name}_final')
+elif len(vmec_files_list)==0:
     vmec_input_filename = os.path.join(parent_path, 'vmec_inputs', inputs.vmec_input_start)
 else:
     vmec_input_files = [file for file in vmec_files_list if 'input.' in file]
@@ -100,7 +102,10 @@ if len(bs_json_files)==0:
     base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
     base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
 else:
-    bs_temporary = load(os.path.join(coils_results_path, bs_json_files[-1]))
+    if os.path.exists(os.path.join(coils_results_path, inputs.resulting_field_json)):
+        bs_temporary = load(os.path.join(coils_results_path, inputs.resulting_field_json))
+    else:
+        bs_temporary = load(os.path.join(coils_results_path, bs_json_files[-1]))
     base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
     base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
 # Create the initial coils
@@ -198,7 +203,7 @@ class single_stage_obj_and_der():
         with open(inputs.debug_output_file, "a") as myfile:
             myfile.write(outstr)
         oustr_dict.append(dict1)
-        if np.mod(info['Nfeval'],5)==0:
+        if np.mod(info['Nfeval'],inputs.output_interval)==0:
             pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
             surf_full_boundary.x = surf.x
             surf_full_boundary.to_vtk(os.path.join(coils_results_path,f"surf_intermediate_max_mode_{max_mode}_{info['Nfeval']}"), extra_data=pointData)
@@ -252,7 +257,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
             x0 = np.copy(np.concatenate((JF.x, vmec.x)))
             dofs = np.concatenate((JF.x, vmec.x))
             obj_and_der = single_stage_obj_and_der()
-            with MPIFiniteDifference(prob.objective, mpi, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, diff_method="forward") as prob_jacobian:
+            with MPIFiniteDifference(prob.objective, mpi, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, diff_method=inputs.diff_method) as prob_jacobian:
                 if mpi.proc0_world:
                     res = minimize(obj_and_der.fun, dofs, args=(prob_jacobian,{'Nfeval':0},max_mode,oustr_dict_inner), jac=True, method='BFGS', options={'maxiter': inputs.MAXITER_single_stage}, tol=1e-15)
                     with open(inputs.debug_output_file, "a") as myfile:
