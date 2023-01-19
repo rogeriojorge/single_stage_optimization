@@ -12,6 +12,7 @@ objective*
 *000_*
 *before_inner_loop*
 *after_inner_loop*
+output*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
