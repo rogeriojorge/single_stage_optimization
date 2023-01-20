@@ -145,7 +145,7 @@ for QA_or_QH in QA_or_QHs:
         if finite_beta:
             opt = make_optimizable(fun_J, dofs_vmec, dofs_coils, dof_indicators=["dof","non-dof"])
             grad_with_respect_to_surface = np.empty(len(dofs_vmec))
-            with MPIFiniteDifference(opt.J, mpi, diff_method=derivative_algorithm, abs_step=abs_step, rel_step=rel_step_value) as prob_jacobian:
+            with MPIFiniteDifference(opt.J, mpi, diff_method=derivative_algorithm, abs_step=finite_difference_abs_step, rel_step=finite_difference_rel_step) as prob_jacobian:
                 if mpi.proc0_world:
             # prob_jacobian = FiniteDifference(opt.J, mpi, rel_step=finite_difference_rel_step, abs_step=finite_difference_abs_step, diff_method=derivative_algorithm)
                     grad_with_respect_to_surface = prob_jacobian.jac(dofs_vmec, dofs_coils)[0]
@@ -171,11 +171,6 @@ for QA_or_QH in QA_or_QHs:
                     unitn = n * (1./absn)[:, :, None]
                     Bcoil_n = np.sum(Bcoil*unitn, axis=2)
                     mod_Bcoil = np.linalg.norm(Bcoil, axis=2)
-                    # if finite_beta:
-                    #     B_n = (Bcoil_n - vc.B_external_normal)
-                    #     B_diff = Bcoil - B_external
-                    #     B_N = np.sum(B_diff * n, axis=2)
-                    # else:
                     B_n = Bcoil_n
                     B_diff = Bcoil
                     B_N = np.sum(Bcoil * n, axis=2)
@@ -184,7 +179,6 @@ for QA_or_QH in QA_or_QHs:
                     dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
                     deriv = surface.dnormal_by_dcoeff_vjp(dJdN/(nphi*ntheta)) + surface.dgamma_by_dcoeff_vjp(dJdx/(nphi*ntheta))
                     mixed_dJ = Derivative({surface: deriv})(surface)
-
                     ## Put both gradients together
                     grad_with_respect_to_surface = np.ravel(prob_dJ) + coils_objective_weight * mixed_dJ
                     grad = np.concatenate((grad_with_respect_to_coils, grad_with_respect_to_surface))
@@ -265,7 +259,6 @@ for QA_or_QH in QA_or_QHs:
             print(f'abs_step_array={abs_step_array}')
             print(f'RMS differences grad coils with diff_method={derivative_algorithm}={sqrt_squared_diff_grad_with_respect_to_coils_array}')
             print(f'RMS differences grad surface with diff_method={derivative_algorithm}={sqrt_squared_diff_grad_with_respect_to_surface_array}')
-
             # Plot and save results
             plt.loglog(abs_step_array, sqrt_squared_diff_grad_with_respect_to_coils_array, 'o-', label=r'$\Delta J(x_{\mathrm{coils}})$'+f' ({derivative_algorithm})', linewidth=2.0)
             plt.loglog(abs_step_array, sqrt_squared_diff_grad_with_respect_to_surface_array, 'o-', label=r'$\Delta J(x_{\mathrm{surface}})$'+f' ({derivative_algorithm})', linewidth=2.0)

@@ -26,8 +26,12 @@ mpi = MpiPartition()
 
 
 # Input parameters
+only_grad_stage2 = True
 QA_or_QHs = ['QH','QA']
-derivative_algorithms = ["forward","centered"]
+derivative_algorithm = "centered"
+rel_step = 0
+abs_step = 1e-8
+eps_array = [1e-2, 1e-3, 1e-4, 1e-5, 1e-6]
 LENGTHBOUND=20
 LENGTH_CON_WEIGHT=1e-2
 JACOBIAN_THRESHOLD=50
@@ -54,6 +58,12 @@ OUT_DIR = f"output"
 os.makedirs(OUT_DIR, exist_ok=True)
 os.chdir(OUT_DIR)
 
+if mpi.proc0_world: print(f"""################################################################################
+### Performing a Taylor test ###################################################
+################################################################################
+""")
+fig = plt.figure(figsize=(8, 6), dpi=200)
+ax = plt.subplot(111)
 for QA_or_QH in QA_or_QHs:
     if finite_beta: vmec_file = f'../input.precise{QA_or_QH}_FiniteBeta'
     else: vmec_file = f'../input.precise{QA_or_QH}'
@@ -92,73 +102,151 @@ for QA_or_QH in QA_or_QHs:
     curves = [c.curve for c in coils]
     if finite_beta: Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
     else: Jf = SquaredFlux(surf, bs, local=True)
-
-
-    surf.fix_all()
-    surf.fixed_range(mmin=0, mmax=max_mode, nmin=-max_mode, nmax=max_mode, fixed=False)
-    surf.fix("rc(0,0)")
-    surf_full_boundary.fix_all()
-    surf_full_boundary.fixed_range(mmin=0, mmax=max_mode, nmin=-max_mode, nmax=max_mode, fixed=False)
-    surf_full_boundary.fix("rc(0,0)")
-    number_vmec_dofs = int(len(surf.x))
-    qs = QuasisymmetryRatioResidual(vmec, inputs.quasisymmetry_target_surfaces, helicity_m=inputs.quasisymmetry_helicity_m, helicity_n=inputs.quasisymmetry_helicity_n)
-    objective_tuple = [(vmec.aspect, inputs.aspect_ratio_target, inputs.aspect_ratio_weight), (qs.residuals, 0, inputs.quasisymmetry_weight)]
-    if inputs.include_iota_target: objective_tuple.append((vmec.mean_iota, inputs.iota_target, inputs.iota_weight))
-    prob = LeastSquaresProblem.from_tuples(objective_tuple)
-
-
-
-    # Define the individual terms in the objective function
-    Jf = SquaredFlux(surf, bs)
     Jls = [CurveLength(c) for c in base_curves]
-    Jccdist = CurveCurveDistance(curves, inputs.CC_THRESHOLD, num_basecurves=inputs.ncoils)
-    # Jcsdist = CurveSurfaceDistance(curves, surf, inputs.CS_THRESHOLD)
-    class Jcsdist:
-        def __init__(self) -> None: pass
-        def shortest_distance(self): return 0
-    Jcs = [LpCurveCurvature(c, 2, inputs.CURVATURE_THRESHOLD) for c in base_curves]
+    Jcs = [LpCurveCurvature(c, 2, CURVATURE_THRESHOLD) for c in base_curves]
+    Jccdist = CurveCurveDistance(curves, CC_THRESHOLD, num_basecurves=len(base_curves))
+    Jcsdist = CurveSurfaceDistance(curves, surf, CS_THRESHOLD)
     Jmscs = [MeanSquaredCurvature(c) for c in base_curves]
     Jals = [ArclengthVariation(c) for c in base_curves]
-
-    # Form the total objective function. To do this, we can exploit the
-    # fact that Optimizable objects with J() and dJ() functions can be
-    # multiplied by scalars and added
-    J_LENGTH = inputs.LENGTH_WEIGHT * sum(Jls)
-    J_CC = inputs.CC_WEIGHT * Jccdist
-    # J_CS = inputs.CS_WEIGHT * Jcsdist
-    class J_CS:
-        def __init__(self) -> None: pass
-        def J(self): return 0
-        def dJ(self): return 0
-    J_CURVATURE = inputs.CURVATURE_WEIGHT * sum(Jcs)
-    J_MSC = inputs.MSC_WEIGHT * sum(QuadraticPenalty(J, inputs.MSC_THRESHOLD) for J in Jmscs)
-    J_ALS = inputs.ARCLENGTH_WEIGHT * sum(Jals)
-    J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum(QuadraticPenalty(Jls[i], inputs.LENGTHBOUND/len(base_curves)) for i in range(len(base_curves)))
-
-    JF_simple = Jf + J_LENGTH_PENALTY + J_MSC + J_CC
-
-    JF = Jf + J_ALS + J_CC + J_CURVATURE + J_MSC + J_LENGTH_PENALTY# + J_LENGTH + J_CS
-
+    JF = Jf \
+    + CC_WEIGHT * Jccdist \
+    + CS_WEIGHT * Jcsdist \
+    + CURVATURE_WEIGHT * sum(Jcs) \
+    + MSC_WEIGHT * sum(QuadraticPenalty(J, MSC_THRESHOLD) for J in Jmscs) \
+    + LENGTH_CON_WEIGHT * QuadraticPenalty(sum(Jls[i] for i in range(len(base_curves))), LENGTHBOUND) \
+    + ARCLENGTH_WEIGHT * sum(Jals)
 
     J_stage_1 = prob.objective()
     J_stage_2 = coils_objective_weight * JF.J()
     J = J_stage_1 + J_stage_2
 
+    def set_dofs(x0):
+        if np.sum(JF.x!=x0[:-number_vmec_dofs])>0:
+            JF.x = x0[:-number_vmec_dofs]
+        if np.sum(prob.x!=x0[-number_vmec_dofs:])>0:
+            prob.x = x0[-number_vmec_dofs:]
+            if finite_beta:
+                vc = VirtualCasing.from_vmec(vmec, src_nphi=vc_src_nphi, trgt_nphi=nphi, trgt_ntheta=ntheta)
+                Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
+                JF.opts[0].opts[0].opts[0] = Jf
+        bs.set_points(surf.gamma().reshape((-1, 3)))
 
+    def fun_J(dofs_vmec, dofs_coils):
+        print(f'    processor {MPI.COMM_WORLD.Get_rank()} running fun_J')
+        set_dofs(np.concatenate((np.ravel(dofs_coils), np.ravel(dofs_vmec))))
+        if only_grad_stage2:
+            J_stage_1 = 0
+        else:
+            J_stage_1 = prob.objective()
+        J_stage_2 = coils_objective_weight * JF.J()
+        J = J_stage_1 + J_stage_2
+        return J
 
+    def grad_fun_analytical(x0, finite_difference_rel_step=rel_step, finite_difference_abs_step=abs_step, derivative_algorithm=derivative_algorithm):
+        set_dofs(x0)
+        dofs_vmec = prob.x
+        dofs_coils = JF.x
+        ## Finite differences for the second-stage objective function
+        coils_dJ = JF.dJ()
+        grad_with_respect_to_coils = coils_objective_weight * coils_dJ
+        if finite_beta:
+            opt = make_optimizable(fun_J, dofs_vmec, dofs_coils, dof_indicators=["dof","non-dof"])
+            grad_with_respect_to_surface = np.empty(len(dofs_vmec))
+            with MPIFiniteDifference(opt.J, mpi, diff_method=derivative_algorithm, abs_step=finite_difference_abs_step, rel_step=finite_difference_rel_step) as prob_jacobian:
+                if mpi.proc0_world:
+                    grad_with_respect_to_surface = prob_jacobian.jac(dofs_vmec, dofs_coils)[0]
+            mpi.comm_world.Bcast(grad_with_respect_to_surface, root=0)
+            grad = np.concatenate((grad_with_respect_to_coils, grad_with_respect_to_surface))
+        else:
+            grad = np.array([0]*len(x0))
+            with MPIFiniteDifference(prob.objective, mpi, rel_step=finite_difference_rel_step, abs_step=finite_difference_abs_step, diff_method=derivative_algorithm) as prob_jacobian:
+                if mpi.proc0_world:
+                    if only_grad_stage2:
+                        prob_dJ = 0
+                    else:
+                        prob_dJ = prob_jacobian.jac(prob.x)
+                    surface = surf
+                    bs.set_points(surface.gamma().reshape((-1, 3)))
+                    ## Mixed term - derivative of squared flux with respect to the surface shape
+                    n = surface.normal()
+                    absn = np.linalg.norm(n, axis=2)
+                    B = bs.B().reshape((nphi, ntheta, 3))
+                    dB_by_dX = bs.dB_by_dX().reshape((nphi, ntheta, 3, 3))
+                    Bcoil = bs.B().reshape(n.shape)
+                    unitn = n * (1./absn)[:, :, None]
+                    Bcoil_n = np.sum(Bcoil*unitn, axis=2)
+                    mod_Bcoil = np.linalg.norm(Bcoil, axis=2)
+                    B_n = Bcoil_n
+                    B_diff = Bcoil
+                    B_N = np.sum(Bcoil * n, axis=2)
+                    assert Jf.local
+                    dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
+                    dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
+                    deriv = surface.dnormal_by_dcoeff_vjp(dJdN/(nphi*ntheta)) + surface.dgamma_by_dcoeff_vjp(dJdx/(nphi*ntheta))
+                    mixed_dJ = Derivative({surface: deriv})(surface)
+                    ## Put both gradients together
+                    grad_with_respect_to_surface = np.ravel(prob_dJ) + coils_objective_weight * mixed_dJ
+                    grad = np.concatenate((grad_with_respect_to_coils, grad_with_respect_to_surface))
+                mpi.comm_world.Bcast(grad, root=0)
+        return grad
 
-    pprint("""
-    ################################################################################
-    ### Perform a Taylor test ######################################################
-    ################################################################################
-    """)
-    f = fun
-    dofs = JF.x
+    def f(x0, gradient=True):
+        set_dofs(x0)
+        if only_grad_stage2:
+            J_stage_1 = 0
+        else:
+            J_stage_1 = prob.objective()
+        J_stage_2 = coils_objective_weight * JF.J()
+        J = J_stage_1 + J_stage_2
+        if gradient: grad = grad_fun_analytical(x0)
+        else: grad = 0
+        return J, grad
+
+    if mpi.proc0_world: print(f"""    ########################################################################
+    ######## {QA_or_QH} ############################################################
+    ########################################################################""")
+    dofs = np.concatenate((JF.x, vmec.x))
     np.random.seed(1)
     h = np.random.uniform(size=dofs.shape)
+    if mpi.proc0_world: print("    Calculating f")
     J0, dJ0 = f(dofs)
     dJh = sum(dJ0 * h)
-    for eps in [1e-3, 1e-4, 1e-5, 1e-6, 1e-7]:
-        J1, _ = f(dofs + eps*h)
-        J2, _ = f(dofs - eps*h)
-        pprint("err", (J1-J2)/(2*eps) - dJh)
+    if mpi.proc0_world: print("    Calculating epsilon")
+    err_array = []
+    for eps in eps_array:
+        start_time = time.time()
+        J1, _ = f(dofs + eps*h, gradient=False)
+        J2, _ = f(dofs - eps*h, gradient=False)
+        err = np.abs((J1-J2)/(2*eps) - dJh)
+        end_time = time.time()
+        if mpi.proc0_world:print(f"        eps={eps:.2}, err={err:.3}, time={(end_time-start_time):.3}s")
+        err_array.append(err)
+    if mpi.proc0_world:
+        # Plot and save results
+        if only_grad_stage2: plt.loglog(eps_array, err_array, 'o-', label=QA_or_QH, linewidth=2.0)
+        else:                plt.loglog(eps_array, err_array, 'o-', label=QA_or_QH, linewidth=2.0)
+                
+plt.gca().invert_xaxis()
+plt.xlabel('step size $\Delta x$', fontsize=22)
+if only_grad_stage2:
+    plt.ylabel("$|\Delta J_2/\Delta x - J_2'(x)|$", fontsize=22)
+else:
+    plt.ylabel("$|\Delta J/\Delta x - J'(x)|$", fontsize=22)
+ax.tick_params(axis='x', labelsize=16)
+ax.tick_params(axis='y', labelsize=16)
+plt.tight_layout()
+# ax.legend(fontsize=20)
+plt.legend(fontsize=20)
+plt.savefig(f"taylor_test_result"+"_J2" if only_grad_stage2 else ""+".png", dpi=250)
+plt.close()
+# plt.show()
+
+# Remove spurious files
+if mpi.proc0_world:
+    for objective_file in glob.glob(f"jac_log*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"parvmec*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"threed*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"mercier*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"fort*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"wout*"): os.remove(objective_file)
+    for objective_file in glob.glob(f"input*"): os.remove(objective_file)
