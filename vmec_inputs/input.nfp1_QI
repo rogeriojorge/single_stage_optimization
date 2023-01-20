@@ -1,0 +1,39 @@
+&INDATA
+! This file created by simsopt on January 19 2023, 11:51:10
+
+! ---- Geometric parameters ----
+NFP = 1
+LASYM = F
+
+! ---- Resolution parameters ----
+MPOL = 3
+NTOR = 2
+NS_ARRAY    =     12     51
+NITER_ARRAY =   5000   5000
+FTOL_ARRAY  =  1e-10  1e-11
+
+! ---- Boundary toroidal flux ----
+PHIEDGE = 10.031887315799702
+
+! ---- Pressure profile specification ----
+PMASS_TYPE = "power_series"
+AM = 0.0 
+PRES_SCALE = 1.0
+
+! ---- Profile specification of iota or current ----
+NCURR = 1
+CURTOR = 0.0
+PCURR_TYPE = "power_series"
+AC = 0.0 
+
+! ---- Other numerical parameters ----
+DELT = 0.3
+NSTEP = 250
+
+! ---- Boundary shape. Array index order is (n, m) ----
+RBC(   0,   0) =  1.000000000000000e+00,    ZBS(   0,   0) =  0.000000000000000e+00
+RBC(  -1,   1) = -7.542668890493673e-03,    ZBS(  -1,   1) = -1.885667222623418e-03
+RBC(   0,   1) =  1.250000000000000e-01,    ZBS(   0,   1) =  1.250000000000000e-01
+RBC(   1,   1) = -7.542668890493673e-03,    ZBS(   1,   1) = -1.885667222623418e-03
+/
+
