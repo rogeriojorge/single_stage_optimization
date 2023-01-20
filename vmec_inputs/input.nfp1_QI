@@ -13,7 +13,7 @@ NITER_ARRAY =   5000   5000
 FTOL_ARRAY  =  1e-10  1e-11
 
 ! ---- Boundary toroidal flux ----
-PHIEDGE = 10.031887315799702
+PHIEDGE = 0.0486665534
 
 ! ---- Pressure profile specification ----
 PMASS_TYPE = "power_series"
