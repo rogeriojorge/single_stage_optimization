@@ -6,6 +6,7 @@ TEMPORARY NOTE: use single_stage branch from SIMSOPT while it is not merged to m
 """
 import os
 import sys
+import glob
 import json
 import time
 import shutil
@@ -28,7 +29,7 @@ from simsopt._core.finite_difference import MPIFiniteDifference
 from simsopt.geo import (curves_to_vtk, create_equally_spaced_curves)
 from src.vmecPlot2 import main as vmecPlot2_main
 from src.field_from_coils import main as field_from_coils_main
-from src.auxiliary_functions import (pprint, recalculate_inputs,
+from src.initialization_functions import (pprint, recalculate_inputs,
                                      create_results_folders, create_initial_coils)
 from src.stage_1 import form_stage_1_objective_function
 from src.stage_2 import form_stage_2_objective_function, inner_coil_loop
@@ -42,18 +43,18 @@ logger = logging.getLogger(__name__)
 # log(level=logging.DEBUG)
 # log(level=logging.INFO)
 # Check if user selected QA or QH when launching main.py
-QAQHselected=False
+QAQHQIselected=False
 if len(sys.argv) > 1:
-    if sys.argv[1]=='QA' or sys.argv[1]=='QH':
-        QAorQH = sys.argv[1]
-        QAQHselected=True
-if not QAQHselected:
-    pprint('First line argument (QA or QH) not selected. Defaulting to QA.')
-    QAorQH = 'QA'
+    if sys.argv[1]=='QA' or sys.argv[1]=='QH' or sys.argv[1]=='QI':
+        QAorQHorQI = sys.argv[1]
+        QAQHQIselected=True
+if not QAQHQIselected:
+    pprint('First line argument (QA, QH or QI) not selected. Defaulting to QA.')
+    QAorQHorQI = 'QA'
 ###############
 # Parse the command line arguments and overwrite inputs.py if needed
 parser = argparse.ArgumentParser()
-inputs = recalculate_inputs(parser, QAQHselected, QAorQH, sys.argv)
+inputs = recalculate_inputs(parser, QAQHQIselected, QAorQHorQI, sys.argv)
 # Create results folders
 parent_path = str(Path(__file__).parent.resolve())
 current_path = os.path.join(parent_path, 'results', f'{inputs.name}')
@@ -217,7 +218,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         if max_mode != previous_max_mode: oustr_dict_inner=[]
         pprint(f' Starting optimization with max_mode={max_mode}')
         pprint(f'  Forming stage 1 objective function')
-        vmec, vmec_full_boundary, surf, surf_full_boundary, qs, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
+        vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
         pprint(f'  Forming stage 2 objective function')
         JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, \
             J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY = form_stage_2_objective_function(surf, bs, base_curves, curves, inputs)
@@ -356,7 +357,7 @@ if inputs.create_wout_final:
     try:
         vmec_final = Vmec(os.path.join(current_path, f'input.{inputs.name}_final'))
         vmec_final.indata.ns_array[:3]    = [  16,    51,    101]
-        vmec_final.indata.niter_array[:3] = [ 2000,  3000,  8000]
+        vmec_final.indata.niter_array[:3] = [ 2000,  3000, 20000]
         vmec_final.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
         vmec_final.run()
         if mpi.proc0_world:
@@ -438,6 +439,14 @@ if os.path.isfile(os.path.join(current_path, f"wout_{inputs.name}_final.nc")):
 os.chdir(parent_path)
 # Stop the timer
 stop = time.time()
+# Remove spurious files
+if mpi.proc0_world:
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"jac_*")): os.remove(objective_file)
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"objective_*")): os.remove(objective_file)
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"residuals_*")): os.remove(objective_file)
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"*000_*")): os.remove(objective_file)
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"parvmec*")): os.remove(objective_file)
+    for objective_file in glob.glob(os.path.join(vmec_results_path,f"threed*")): os.remove(objective_file)
 # Finish
 pprint("============================================")
 pprint("End of single stage optimization")

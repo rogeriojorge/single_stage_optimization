@@ -6,8 +6,8 @@ NFP = 4
 LASYM = F
 
 ! ---- Resolution parameters ----
-MPOL = 5
-NTOR = 5
+MPOL = 4
+NTOR = 4
 NS_ARRAY    =     16
 NITER_ARRAY =   1500
 FTOL_ARRAY  =  1e-12

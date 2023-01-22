@@ -7,7 +7,7 @@ import numpy as np
 import booz_xform as bx
 from math import ceil, sqrt
 import matplotlib.pyplot as plt
-from .auxiliary_functions import plot_qfm_poincare
+from .qfm_functions import plot_qfm_poincare
 from simsopt import load
 from simsopt.mhd import Vmec, Boozer
 from simsopt.geo import SurfaceRZFourier

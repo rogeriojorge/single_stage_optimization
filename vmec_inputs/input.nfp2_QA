@@ -6,11 +6,11 @@ NFP = 2
 LASYM = F
 
 ! ---- Resolution parameters ----
-MPOL = 5
-NTOR = 5
-NS_ARRAY    =     16 !    51 !   101
-NITER_ARRAY =   1500 !  2000 !  5000
-FTOL_ARRAY  =  1e-12 ! 1e-12 ! 1e-15
+MPOL = 4
+NTOR = 4
+NS_ARRAY    =     16
+NITER_ARRAY =   1500
+FTOL_ARRAY  =  1e-12
 
 ! ---- Boundary toroidal flux ----
 PHIEDGE = 0.08385727554

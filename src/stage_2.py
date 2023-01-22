@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-from .auxiliary_functions import pprint
+from .initialization_functions import pprint
 import matplotlib.pyplot as plt
 from simsopt.geo import (CurveLength, CurveCurveDistance, MeanSquaredCurvature,
                         LpCurveCurvature, ArclengthVariation)
