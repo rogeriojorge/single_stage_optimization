@@ -100,8 +100,14 @@ surf_full_boundary = vmec_full_boundary.boundary
 # Check if there are already optimized coils we can use
 bs_json_files = [file for file in os.listdir(coils_results_path) if '.json' in file]
 if len(bs_json_files)==0:
-    base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
-    base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
+    bs_initial_file = os.path.join(parent_path, 'coil_inputs', f'biot_savart_nfp{vmec.indata.nfp}_{QAorQHorQI}_ncoils{inputs.ncoils}.json')
+    if inputs.use_initial_coils_if_available and os.path.isfile(bs_initial_file):
+        bs_temporary = load(bs_initial_file)
+        base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
+        base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
+    else:
+        base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
+        base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
 else:
     if os.path.exists(os.path.join(coils_results_path, inputs.resulting_field_json)):
         bs_temporary = load(os.path.join(coils_results_path, inputs.resulting_field_json))
