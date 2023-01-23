@@ -15,11 +15,11 @@ iota_target_QA = 0.42 # Target rotational transform iota
 aspect_ratio_target_QA = 6  # Target aspect ratio
 # QH
 vmec_input_start_QH = 'input.nfp4_QH_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QH = 10 # Threshold for the sum of coil lengths (each coil is constrained to LENGTHBOUND/ncoils)
+LENGTHBOUND_QH = 14 # Threshold for the sum of coil lengths (each coil is constrained to LENGTHBOUND/ncoils)
 CC_THRESHOLD_QH = 0.06 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QH = 16 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QH = 16 # Threshold for the mean squared curvature penalty in the objective function
-ncoils_QH = 4 # Number of coils per half field period
+ncoils_QH = 3 # Number of coils per half field period
 quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
 aspect_ratio_target_QH = 7  # Target aspect ratio
@@ -95,7 +95,7 @@ diff_method = "forward" # "forward" # "centered"
 # Stage 2 optimization parameters
 coils_objective_weight = 1e+3 # Scale of stage 2 objective with respect to stage 1 objective
 R0 = 1.0 # Major radius for the initial circular coils
-R1 = 0.5 # Minor radius for the initial circular coils
+R1 = 0.35 # Minor radius for the initial circular coils
 initial_current = 1e5 # Initial current for all coils
 nphi = 50 # Toroidal resolution for the Biot-Savart magnetic field
 ntheta = 30 # Poloidal resolution for the Biot-Savart magnetic field
