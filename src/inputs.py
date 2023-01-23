@@ -25,7 +25,7 @@ quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
 aspect_ratio_target_QH = 7  # Target aspect ratio
 # QI
-vmec_input_start_QI = 'input.nfp1_QI' # VMEC input file that serves as a start for the optimization when there are no previous results
+vmec_input_start_QI = 'input.nfp3_QI' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QI = 14 # Threshold for the sum of coil lengths (each coil is constrained to LENGTHBOUND/ncoils)
 CC_THRESHOLD_QI = 0.06 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QI = 16 # Threshold for the curvature penalty in the objective function
@@ -35,15 +35,18 @@ quasisymmetry_helicity_n_QI = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QI = False # Specify if iota should be added to the objective function
 iota_target_QI = 0.61 # Target rotational transform iota
 aspect_ratio_target_QI = 7  # Target aspect ratio
-elongation_weight = 5e-2
-snorms = [0.2,0.4,0.6,0.8] # Flux surfaces at which the penalty will be calculated
-nphi_QI=251 # Number of points along measured along each well
-nalpha_QI=51 # Number of wells measured
-nBj_QI=151 # Number of bounce points measured
+elongation_weight = 1e2
+mirror_weight = 1e2
+snorms = [1/16, 5/16, 9/16, 13/16] # Flux surfaces at which the penalty will be calculated
+nphi_QI=151 # Number of points along measured along each well
+nalpha_QI=31 # Number of wells measured
+nBj_QI=61 # Number of bounce points measured
 mpol_QI=20 # Poloidal modes in Boozer transformation
 ntor_QI=20 # Toroidal modes in Boozer transformation
 nphi_out_QI=2000 # size of return array if arr_out_QI = True
 arr_out_QI=True # If True, returns (nphi_out*nalpha) values, each of which is the difference
+maximum_elongation = 6 # Defines the maximum elongation allowed in the QI elongation objective function
+maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the QI elongation objective function
 # Generic
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
@@ -51,7 +54,7 @@ single_stage = False # Perform a single stage optimization
 order = 16 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
-max_modes = [1] # Fourier mode resolution for the plasma surface
+max_modes = [2] # Fourier mode resolution for the plasma surface
 MAXITER_stage_1 = 10 # Number of iterations to perform in the stage 1 optimization
 MAXITER_stage_2_simple = 5 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
 MAXITER_stage_2 = 5 # Number of iterations to perform in the stage 2 optimization
@@ -65,7 +68,7 @@ vmec_plot_result = True # Plot the optimized VMEC result
 find_QFM_surface = False # Find QFM surface and resulting VMEC equilibrium
 vmec_plot_QFM_result = False # Plot the found QFM equilibrium
 create_Poincare_plot = False # Create Poincare plot from coils
-booz_xform_plot_result = False
+booz_xform_plot_result = True
 booz_xform_plot_QFM_result = False
 debug_coils_outputtxt = True
 # Diagnostics for coils and plasma
@@ -87,12 +90,13 @@ ntheta_qfm = 40
 JACOBIAN_THRESHOLD = 850 # Value of the objective function if VMEC does not converge
 aspect_ratio_weight = 1 # Weight for the aspect ratio objective
 quasisymmetry_target_surfaces = [0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ] # Normalized toroidal flux surfaces to target quasisymmetry
-qsqi_weight = 1e1 # Weight for the quasisymmetry residuals objective
+qsqi_weight = 1e0 # Weight for the quasisymmetry residuals objective
 quasisymmetry_helicity_m = 1 # Poloidal quasisymmetry integer M in |B|
 iota_weight = 1e2 # Weight for the rotational transform objective
 finite_difference_rel_step = 1e-3 # Relative step size for the stage 1 finite difference
-finite_difference_abs_step = 1e-5 # Absolute step size for the stage 1 finite difference
-diff_method = "forward" # "forward" # "centered"
+finite_difference_abs_step = 1e-4 # Absolute step size for the stage 1 finite difference
+diff_method = "centered" # "forward" # "centered"
+ftol = 1e-5 # threshold to end optimization
 # Stage 2 optimization parameters
 coils_objective_weight = 1e+3 # Scale of stage 2 objective with respect to stage 1 objective
 R0 = 1.0 # Major radius for the initial circular coils

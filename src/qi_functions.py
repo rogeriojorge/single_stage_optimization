@@ -3,11 +3,12 @@ from simsopt.mhd import Boozer
 from scipy.interpolate import UnivariateSpline
 from scipy.optimize import fsolve
 from scipy.special import ellipe
-
+import warnings
+warnings.filterwarnings('ignore', 'The iteration is not making good progress')
 
 # Returns a magnetic field's QI deviation on a flux surface
 def QuasiIsodynamicResidual(vmec,snorms,weights=None,
-                nphi=401,nalpha=75,nBj=601,
+                nphi=601,nalpha=75,nBj=401,
                 mpol=40,ntor=40,
                 nphi_out=2000,
                 arr_out=True):
@@ -385,7 +386,7 @@ def AspectRatioPen(vmec,t=10):
     return pen
 
 # Penalizes the configuration's maximum elongation
-def MaxElongationPen(vmec,t=6.0,ntheta=16,nphi=8):
+def MaxElongationPen(vmec,t=6.0,ntheta=14,nphi=6):
     """
     Penalizes the configuration's maximum elongation (e_max) if it exceeds some threshold (t).
     Specifically, if e_max > t, then output (e_max - t). Else, output zero.
@@ -583,11 +584,10 @@ def MaxElongationPen(vmec,t=6.0,ntheta=16,nphi=8):
     # Penalize maximum elongation
     # print("Max Elongation =",np.max(elongs))
     # print("Mean Elongation =",np.mean(elongs))
-    # e = np.max(elongs)
-    # pen = np.max([0,e-t])
-    # pen = np.
-    # return pen
-    return elongs/len(elongs)
+    e = np.max(elongs)
+    pen = np.max([0,e-t])
+    return pen
+    # return elongs/len(elongs)
 
 # Finds unit normal vector of plane defined by points a, b, and c
 # Helper function for FindArea
