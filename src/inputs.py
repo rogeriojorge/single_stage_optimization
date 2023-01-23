@@ -25,7 +25,7 @@ include_iota_target_QH = False # Specify if iota should be added to the objectiv
 aspect_ratio_target_QH = 7  # Target aspect ratio
 # QI
 vmec_input_start_QI = 'input.nfp1_QI' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QI = 3.0 # Threshold for the length of each coil
+LENGTHBOUND_QI = 4.0 # Threshold for the length of each coil
 CC_THRESHOLD_QI = 0.06 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QI = 16 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QI = 16 # Threshold for the mean squared curvature penalty in the objective function
