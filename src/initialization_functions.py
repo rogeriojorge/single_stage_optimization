@@ -51,7 +51,7 @@ def recalculate_inputs(parser, QAQHQIselected, QAorQHorQI, sysargv):
     inputs.MAXITER_stage_2 = args.MAXITER_stage_2
     inputs.MAXITER_single_stage = args.MAXITER_single_stage
     inputs.iota_target = args.iota_target
-    inputs.ncoils = args.ncoils
+    inputs.ncoils = int(args.ncoils)
     inputs.LENGTHBOUND = args.lengthbound
     inputs.CC_THRESHOLD = args.cc_threshold
     inputs.MSC_THRESHOLD = args.msc_threshold
@@ -69,7 +69,7 @@ def recalculate_inputs(parser, QAQHQIselected, QAorQHorQI, sysargv):
     if args.stage2: stage_string+='2'
     if args.single_stage: stage_string+='3'
     if stage_string == '': stage_string = '123'
-    inputs.name = f'{QAorQHorQI}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{args.ncoils}_nfp{args.vmec_input_start[9:10]}'
+    inputs.name = f'{QAorQHorQI}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{int(args.ncoils)}_nfp{args.vmec_input_start[9:10]}'
     return inputs
 
 def create_results_folders(inputs):

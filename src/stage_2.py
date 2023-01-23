@@ -36,7 +36,7 @@ def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
     J_CURVATURE = inputs.CURVATURE_WEIGHT * sum(Jcs)
     J_MSC = inputs.MSC_WEIGHT * sum(QuadraticPenalty(J, inputs.MSC_THRESHOLD) for J in Jmscs)
     J_ALS = inputs.ARCLENGTH_WEIGHT * sum(Jals)
-    J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum(QuadraticPenalty(Jls[i], inputs.LENGTHBOUND/len(base_curves)) for i in range(len(base_curves)))
+    J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum(QuadraticPenalty(Jls[i], inputs.LENGTHBOUND) for i in range(len(base_curves)))
 
     JF_simple = Jf + J_LENGTH_PENALTY + J_MSC + J_CC
 

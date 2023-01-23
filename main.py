@@ -276,7 +276,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         except Exception as e:
                             myfile.write(e)
         # Stage 2 Optimization after single_stage
-        if (inputs.stage_2 and inputs.single_stage) or (inputs.stage_2 and not inputs.single_stage and not inputs.stage_1):
+        if (inputs.stage_2 and inputs.single_stage) or (inputs.stage_2 and not inputs.single_stage and not inputs.stage_1 and not previous_max_mode==0):
             pprint(f'  Performing Stage 2 optimization with {inputs.MAXITER_stage_2+inputs.MAXITER_stage_2_simple} iterations')
             surf = vmec.boundary
             bs.set_points(surf.gamma().reshape((-1, 3)))
