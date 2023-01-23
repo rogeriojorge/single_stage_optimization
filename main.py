@@ -232,7 +232,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         if inputs.stage_1:
             os.chdir(vmec_results_path)
             pprint(f'  Performing Stage 1 optimization with {inputs.MAXITER_stage_1} iterations')
-            least_squares_mpi_solve(prob, mpi, grad=True, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, max_nfev=inputs.MAXITER_stage_1, ftol=inputs.ftol)
+            least_squares_mpi_solve(prob, mpi, grad=True, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, max_nfev=inputs.MAXITER_stage_1, ftol=inputs.ftol, atol=inputs.ftol, rtol=inputs.ftol)
             os.chdir(current_path)
             if mpi.proc0_world:
                 with open(inputs.debug_output_file, "a") as myfile:
