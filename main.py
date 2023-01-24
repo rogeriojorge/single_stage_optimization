@@ -16,17 +16,14 @@ import numpy as np
 import pandas as pd
 import booz_xform as bx
 from pathlib import Path
-from simsopt import load
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
-from simsopt.field import Current
 from simsopt.mhd import Vmec, Boozer
 from simsopt.util import MpiPartition
 from simsopt._core.derivative import Derivative
 from simsopt.solve import least_squares_mpi_solve
-from simsopt.geo import create_equally_spaced_curves
 from simsopt._core.finite_difference import MPIFiniteDifference
-from simsopt.geo import (curves_to_vtk, create_equally_spaced_curves)
+from simsopt.geo import curves_to_vtk
 from src.vmecPlot2 import main as vmecPlot2_main
 from src.field_from_coils import main as field_from_coils_main
 from src.initialization_functions import (pprint, recalculate_inputs,
@@ -43,18 +40,18 @@ logger = logging.getLogger(__name__)
 # log(level=logging.DEBUG)
 # log(level=logging.INFO)
 # Check if user selected QA or QH when launching main.py
-QAQHQIselected=False
+QAQHQICNTselected=False
 if len(sys.argv) > 1:
-    if sys.argv[1]=='QA' or sys.argv[1]=='QH' or sys.argv[1]=='QI':
-        QAorQHorQI = sys.argv[1]
-        QAQHQIselected=True
-if not QAQHQIselected:
-    pprint('First line argument (QA, QH or QI) not selected. Defaulting to QA.')
-    QAorQHorQI = 'QA'
+    if sys.argv[1]=='QA' or sys.argv[1]=='QH' or sys.argv[1]=='QI' or sys.argv[1]=='CNT':
+        QAorQHorQIorCNT = sys.argv[1]
+        QAQHQICNTselected=True
+if not QAQHQICNTselected:
+    pprint('First line argument (QA, QH, QI or CNT) not selected. Defaulting to QA.')
+    QAorQHorQIorCNT = 'QA'
 ###############
 # Parse the command line arguments and overwrite inputs.py if needed
 parser = argparse.ArgumentParser()
-inputs = recalculate_inputs(parser, QAQHQIselected, QAorQHorQI, sys.argv)
+inputs = recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sys.argv)
 # Create results folders
 parent_path = str(Path(__file__).parent.resolve())
 current_path = os.path.join(parent_path, 'results', f'{inputs.name}')
@@ -101,27 +98,7 @@ else:
     vmec_full_boundary = vmec
 surf = vmec.boundary
 surf_full_boundary = vmec_full_boundary.boundary
-# Check if there are already optimized coils we can use
-bs_json_files = [file for file in os.listdir(coils_results_path) if '.json' in file]
-if len(bs_json_files)==0:
-    bs_initial_file = os.path.join(parent_path, 'coil_inputs', f'biot_savart_nfp{vmec.indata.nfp}_{QAorQHorQI}_ncoils{inputs.ncoils}.json')
-    if inputs.use_initial_coils_if_available and os.path.isfile(bs_initial_file):
-        bs_temporary = load(bs_initial_file)
-        base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
-        base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
-    else:
-        base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
-        base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
-else:
-    if os.path.exists(os.path.join(coils_results_path, inputs.resulting_field_json)):
-        bs_temporary = load(os.path.join(coils_results_path, inputs.resulting_field_json))
-    else:
-        bs_temporary = load(os.path.join(coils_results_path, bs_json_files[-1]))
-    base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
-    base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
-# Create the initial coils
-base_currents[0].fix_all()
-bs, coils, curves = create_initial_coils(base_curves, base_currents, vmec.indata.nfp, surf_full_boundary, coils_results_path, inputs, mpi)
+bs, coils, curves, base_curves = create_initial_coils(vmec, parent_path, coils_results_path, inputs, surf_full_boundary, mpi)
 ################################################################
 ######### DEFINE OBJECTIVE FUNCTION AND ITS DERIVATIVES ########
 ################################################################
@@ -168,7 +145,7 @@ class single_stage_obj_and_der():
             outstr += f"\n surface dofs="+", ".join([f"{pr}" for pr in dofs[-number_vmec_dofs:]])
             if J<inputs.JACOBIAN_THRESHOLD:
                 dict1.update({'Jquasisymmetry':float(qs.total()), 'Jiota':float((vmec.mean_iota()-inputs.iota_target)**2), 'Jaspect':float((vmec.aspect()-inputs.aspect_ratio_target)**2)})
-                if QAorQHorQI=='QA' or QAorQHorQI=='QH': outstr += f"\n Quasisymmetry objective={qs.total()}"
+                if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': outstr += f"\n Quasisymmetry objective={qs.total()}"
                 outstr += f"\n aspect={vmec.aspect()}"
                 outstr += f"\n mean iota={vmec.mean_iota()}"
             else:
@@ -243,7 +220,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQI=='QA' or QAorQHorQI=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -258,7 +235,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQI=='QA' or QAorQHorQI=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -275,7 +252,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         try:
                             myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                             myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                            if QAorQHorQI=='QA' or QAorQHorQI=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                            if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                             myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                         except Exception as e:
                             myfile.write(e)
@@ -290,7 +267,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQI=='QA' or QAorQHorQI=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -305,7 +282,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         try:
             pprint(f"Aspect ratio at max_mode {max_mode}: {vmec.aspect()}")
             pprint(f"Mean iota at {max_mode}: {vmec.mean_iota()}")
-            if QAorQHorQI=='QA' or QAorQHorQI=='QH': pprint(f"Quasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+            if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': pprint(f"Quasisymmetry objective at max_mode {max_mode}: {qs.total()}")
             pprint(f"Squared flux at max_mode {max_mode}: {Jf.J()}")
         except Exception as e:
             pprint(e)
@@ -358,7 +335,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
     try:
         pprint(f"Aspect ratio after optimization: {vmec.aspect()}")
         pprint(f"Mean iota after optimization: {vmec.mean_iota()}")
-        if QAorQHorQI=='QA' or QAorQHorQI=='QH': pprint(f"Quasisymmetry objective after optimization: {qs.total()}")
+        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': pprint(f"Quasisymmetry objective after optimization: {qs.total()}")
         pprint(f"Squared flux after optimization: {Jf.J()}")
     except Exception as e:
         pprint(e)
@@ -451,6 +428,7 @@ os.chdir(parent_path)
 stop = time.time()
 # Remove spurious files
 if mpi.proc0_world:
+    for objective_file in glob.glob(os.path.join(current_path,f"jac_*")): os.remove(objective_file)
     for objective_file in glob.glob(os.path.join(vmec_results_path,f"jac_*")): os.remove(objective_file)
     for objective_file in glob.glob(os.path.join(vmec_results_path,f"objective_*")): os.remove(objective_file)
     for objective_file in glob.glob(os.path.join(vmec_results_path,f"residuals_*")): os.remove(objective_file)
