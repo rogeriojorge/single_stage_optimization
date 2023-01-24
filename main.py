@@ -145,7 +145,7 @@ class single_stage_obj_and_der():
             outstr += f"\n surface dofs="+", ".join([f"{pr}" for pr in dofs[-number_vmec_dofs:]])
             if J<inputs.JACOBIAN_THRESHOLD:
                 dict1.update({'Jquasisymmetry':float(qs.total()), 'Jiota':float((vmec.mean_iota()-inputs.iota_target)**2), 'Jaspect':float((vmec.aspect()-inputs.aspect_ratio_target)**2)})
-                if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': outstr += f"\n Quasisymmetry objective={qs.total()}"
+                if not QAorQHorQIorCNT=='QI': outstr += f"\n Quasisymmetry objective={qs.total()}"
                 outstr += f"\n aspect={vmec.aspect()}"
                 outstr += f"\n mean iota={vmec.mean_iota()}"
             else:
@@ -220,7 +220,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if not QAorQHorQIorCNT=='QI': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -230,12 +230,12 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
             surf = vmec.boundary
             bs.set_points(surf.gamma().reshape((-1, 3)))
             if mpi.proc0_world:
-                dofs, bs, JF = inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path)
+                dofs, bs, JF = inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path, surf_full_boundary)
                 with open(inputs.debug_output_file, "a") as myfile:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if not QAorQHorQIorCNT=='QI': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -252,7 +252,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         try:
                             myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                             myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                            if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                            if not QAorQHorQIorCNT=='QI': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                             myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                         except Exception as e:
                             myfile.write(e)
@@ -267,7 +267,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
                         myfile.write(f"\nMean iota at {max_mode}: {vmec.mean_iota()}")
-                        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+                        if not QAorQHorQIorCNT=='QI': myfile.write(f"\nQuasisymmetry objective at max_mode {max_mode}: {qs.total()}")
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
@@ -282,7 +282,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         try:
             pprint(f"Aspect ratio at max_mode {max_mode}: {vmec.aspect()}")
             pprint(f"Mean iota at {max_mode}: {vmec.mean_iota()}")
-            if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': pprint(f"Quasisymmetry objective at max_mode {max_mode}: {qs.total()}")
+            if not QAorQHorQIorCNT=='QI': pprint(f"Quasisymmetry objective at max_mode {max_mode}: {qs.total()}")
             pprint(f"Squared flux at max_mode {max_mode}: {Jf.J()}")
         except Exception as e:
             pprint(e)
@@ -335,7 +335,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
     try:
         pprint(f"Aspect ratio after optimization: {vmec.aspect()}")
         pprint(f"Mean iota after optimization: {vmec.mean_iota()}")
-        if QAorQHorQIorCNT=='QA' or QAorQHorQIorCNT=='QH': pprint(f"Quasisymmetry objective after optimization: {qs.total()}")
+        if not QAorQHorQIorCNT=='QI': pprint(f"Quasisymmetry objective after optimization: {qs.total()}")
         pprint(f"Squared flux after optimization: {Jf.J()}")
     except Exception as e:
         pprint(e)

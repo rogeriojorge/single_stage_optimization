@@ -26,7 +26,7 @@ except ImportError:
 def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     parser.add_argument("--use_half_period", dest="use_half_period", default=inputs.use_half_period, action="store_true")
     parser.add_argument("--finite_beta", dest="finite_beta", default=inputs.finite_beta, action="store_true")
-    parser.add_argument("--ncoils", type=float,               default=inputs.ncoils_QA if QAorQHorQIorCNT=='QA' else inputs.ncoils_QH           if QAorQHorQIorCNT=='QH' else inputs.ncoils_QI) # no ncoils parameter for CNT
+    parser.add_argument("--ncoils", type=float,               default=inputs.ncoils_QA if QAorQHorQIorCNT=='QA' else inputs.ncoils_QH           if QAorQHorQIorCNT=='QH' else inputs.ncoils_QI           if QAorQHorQIorCNT=='QI' else 4)
     parser.add_argument("--vmec_input_start",       default=inputs.vmec_input_start_QA if QAorQHorQIorCNT=='QA' else inputs.vmec_input_start_QH if QAorQHorQIorCNT=='QH' else inputs.vmec_input_start_QI if QAorQHorQIorCNT=='QI' else inputs.vmec_input_start_CNT)
     parser.add_argument("--lengthbound",   type=float,  default=inputs.LENGTHBOUND_QA  if QAorQHorQIorCNT=='QA' else inputs.LENGTHBOUND_QH      if QAorQHorQIorCNT=='QH' else inputs.LENGTHBOUND_QI      if QAorQHorQIorCNT=='QI' else inputs.LENGTHBOUND_CNT     )
     parser.add_argument("--cc_threshold",   type=float, default=inputs.CC_THRESHOLD_QA if QAorQHorQIorCNT=='QA' else inputs.CC_THRESHOLD_QH     if QAorQHorQIorCNT=='QH' else inputs.CC_THRESHOLD_QI     if QAorQHorQIorCNT=='QI' else inputs.CC_THRESHOLD_CNT    )
@@ -90,15 +90,10 @@ def create_results_folders(inputs):
         except OSError: pass
     return coils_results_path, vmec_results_path, figures_results_path
 
-def create_initial_modular_coils(base_curves, base_currents, nfp, surf, coils_results_path, inputs, mpi):
+def create_initial_modular_coils(base_curves, base_currents, nfp):
     coils = coils_via_symmetries(base_curves, base_currents, nfp, True)
     bs = BiotSavart(coils)
-    bs.set_points(surf.gamma().reshape((-1, 3)))
     curves = [c.curve for c in coils]
-    if mpi.proc0_world:
-        curves_to_vtk(curves, os.path.join(coils_results_path, inputs.initial_coils))
-        pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
-        surf.to_vtk(os.path.join(coils_results_path, inputs.initial_surface), extra_data=pointData)
     return bs, coils, curves
 
 def create_initial_coils(vmec, parent_path, coils_results_path, inputs, surf_full_boundary, mpi):
@@ -160,5 +155,10 @@ def create_initial_coils(vmec, parent_path, coils_results_path, inputs, surf_ful
             base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
         # Create the initial coils
         base_currents[0].fix_all()
-        bs, coils, curves = create_initial_modular_coils(base_curves, base_currents, vmec.indata.nfp, surf_full_boundary, coils_results_path, inputs, mpi)
+        bs, coils, curves = create_initial_modular_coils(base_curves, base_currents, vmec.indata.nfp)
+    if mpi.proc0_world:
+        bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
+        curves_to_vtk(curves, os.path.join(coils_results_path, inputs.initial_coils))
+        pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
+        surf_full_boundary.to_vtk(os.path.join(coils_results_path, inputs.initial_surface), extra_data=pointData)
     return bs, coils, curves, base_curves
