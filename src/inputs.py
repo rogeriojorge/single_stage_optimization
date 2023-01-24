@@ -3,7 +3,7 @@ create_wout_final = False # Create a VMEC wout file entitled "final"
 vmec_plot_result = False # Plot the optimized VMEC result
 booz_xform_plot_result = False # Plot the resulting field in Boozer coordinates
 # QA
-vmec_input_start_QA = 'input.nfp3_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
+vmec_input_start_QA = 'input.nfp2_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QA = 4 # Threshold for the length of each coil
 CC_THRESHOLD_QA = 0.1 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QA = 5 # Threshold for the curvature penalty in the objective function
