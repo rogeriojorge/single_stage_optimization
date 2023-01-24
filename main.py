@@ -64,7 +64,11 @@ if mpi.proc0_world and inputs.remove_previous_results and os.path.isdir(current_
 if mpi.proc0_world: Path(current_path).mkdir(parents=True, exist_ok=True)
 current_path = str(Path(current_path).resolve())
 if mpi.proc0_world: shutil.copy(os.path.join(parent_path,'src','inputs.py'), os.path.join(current_path,f'{inputs.name}.py'))
-time.sleep(0.1);os.chdir(current_path)
+time.sleep(0.5)
+try: os.chdir(current_path)
+except:
+    time.sleep(3)
+    os.chdir(current_path)
 coils_results_path, vmec_results_path, figures_results_path = create_results_folders(inputs)
 # Write inputs to file f'inputs_{inputs.name}.json'
 inputs_dict = dict([(att, getattr(inputs,att)) for att in dir(inputs) if '__' not in att])
