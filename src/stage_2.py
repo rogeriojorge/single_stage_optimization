@@ -133,11 +133,13 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_before_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
     pprint(f'\n  Running simple intermediate coil loop with {inputs.MAXITER_stage_2_simple} iterations:')
     info_simple={'Nfeval':0}
+    bs.set_points(surf.gamma().reshape((-1, 3)))
     res = minimize(fun_coils_simple, dofs[:-number_vmec_dofs], jac=True, args=(info_simple,oustr_dict), method='L-BFGS-B', options={'maxiter': inputs.MAXITER_stage_2_simple, 'maxcor': 300}, tol=1e-10)
     dofs[:-number_vmec_dofs] = res.x
     JF.x = dofs[:-number_vmec_dofs]
     pprint(f'\n  Running more complete intermediate coil loop with {inputs.MAXITER_stage_2} iterations:')
     info_not_simple={'Nfeval':0}
+    bs.set_points(surf.gamma().reshape((-1, 3)))
     res = minimize(fun_coils, dofs[:-number_vmec_dofs], jac=True, args=(info_not_simple,oustr_dict), method='L-BFGS-B', options={'maxiter': inputs.MAXITER_stage_2, 'maxcor': 300}, tol=1e-10)
     dofs[:-number_vmec_dofs] = res.x
     JF.x = dofs[:-number_vmec_dofs]
@@ -145,6 +147,7 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
     pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
     surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_after_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
+    bs.set_points(surf.gamma().reshape((-1, 3)))
     bs.save(os.path.join(coils_results_path,f"biot_savart_inner_loop_max_mode_{max_mode}.json"))
     df = pd.DataFrame(oustr_dict)
     df.to_csv(f'output_stage2_max_mode_{max_mode}.csv', index_label='index')

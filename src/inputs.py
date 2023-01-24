@@ -71,7 +71,7 @@ order = 16 # Number of Fourier modes describing each Cartesian component of each
 # Frequent use
 max_modes = [2] # Fourier mode resolution for the plasma surface
 MAXITER_stage_1 = 10 # Number of iterations to perform in the stage 1 optimization
-MAXITER_stage_2_simple = 0 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
+MAXITER_stage_2_simple = 10 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
 MAXITER_stage_2 = 5 # Number of iterations to perform in the stage 2 optimization
 MAXITER_single_stage = 5 # Number of iterations to perform in the main optimization loop
 # Flags
