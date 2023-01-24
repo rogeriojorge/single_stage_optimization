@@ -19,10 +19,22 @@ def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
     class Jcsdist:
         def __init__(self) -> None: pass
         def shortest_distance(self): return 0
-    Jcs = [LpCurveCurvature(c, 2, inputs.CURVATURE_THRESHOLD) for c in base_curves]
+
     Jmscs = [MeanSquaredCurvature(c) for c in base_curves]
-    Jals = [ArclengthVariation(c) for c in base_curves]
+
+    if inputs.QAorQHorQIorCNT == 'CNT':
+        CURVATURE_THRESHOLD_ARRAY = [inputs.CURVATURE_THRESHOLD_CNT_BIG,inputs.CURVATURE_THRESHOLD]
+        Jcs = [LpCurveCurvature(c, 2, CURVATURE_THRESHOLD_ARRAY[i]) for i, c in enumerate(base_curves)]
+        MSC_THRESHOLD_ARRAY = [inputs.MSC_THRESHOLD_CNT_BIG,inputs.MSC_THRESHOLD]
+        J_MSC = inputs.MSC_WEIGHT * sum(QuadraticPenalty(J, MSC_THRESHOLD_ARRAY[i]) for i, J in enumerate(Jmscs))
+        LENGTH_THRESHOLD_ARRAY = [inputs.LENGTHBOUND_CNT_BIG,inputs.LENGTHBOUND]
+        J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum([QuadraticPenalty(Jls[i], LENGTH_THRESHOLD_ARRAY[i]) for i in range(len(base_curves))])
+    else:
+        Jcs = [LpCurveCurvature(c, 2, inputs.CURVATURE_THRESHOLD) for c in base_curves]
+        J_MSC = inputs.MSC_WEIGHT * sum(QuadraticPenalty(J, inputs.MSC_THRESHOLD) for J in Jmscs)
+        J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum(QuadraticPenalty(Jls[i], inputs.LENGTHBOUND) for i in range(len(base_curves)))
     
+    Jals = [ArclengthVariation(c) for c in base_curves]
     # Form the total objective function. To do this, we can exploit the
     # fact that Optimizable objects with J() and dJ() functions can be
     # multiplied by scalars and added
@@ -34,9 +46,7 @@ def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
         def J(self): return 0
         def dJ(self): return 0
     J_CURVATURE = inputs.CURVATURE_WEIGHT * sum(Jcs)
-    J_MSC = inputs.MSC_WEIGHT * sum(QuadraticPenalty(J, inputs.MSC_THRESHOLD) for J in Jmscs)
     J_ALS = inputs.ARCLENGTH_WEIGHT * sum(Jals)
-    J_LENGTH_PENALTY = inputs.LENGTH_CON_WEIGHT * sum(QuadraticPenalty(Jls[i], inputs.LENGTHBOUND) for i in range(len(base_curves)))
 
     JF_simple = Jf + J_LENGTH_PENALTY + J_MSC + J_CC
 
@@ -118,6 +128,9 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     dofs = np.concatenate((JF.x, vmec.x))
     oustr_dict=[]
     curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_before_inner_loop_max_mode_{max_mode}"))
+    bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
+    pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
+    surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_before_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
     pprint(f'\n  Running simple intermediate coil loop with {inputs.MAXITER_stage_2_simple} iterations:')
     info_simple={'Nfeval':0}
     res = minimize(fun_coils_simple, dofs[:-number_vmec_dofs], jac=True, args=(info_simple,oustr_dict), method='L-BFGS-B', options={'maxiter': inputs.MAXITER_stage_2_simple, 'maxcor': 300}, tol=1e-10)
@@ -130,7 +143,6 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     JF.x = dofs[:-number_vmec_dofs]
     curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_after_inner_loop_max_mode_{max_mode}"))
     bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
-    curves_to_vtk(curves, os.path.join(coils_results_path, inputs.initial_coils))
     pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
     surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_after_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
     bs.save(os.path.join(coils_results_path,f"biot_savart_inner_loop_max_mode_{max_mode}.json"))
