@@ -262,7 +262,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
             surf = vmec.boundary
             bs.set_points(surf.gamma().reshape((-1, 3)))
             if mpi.proc0_world:
-                dofs, bs, JF = inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path)
+                dofs, bs, JF = inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path, surf_full_boundary)
                 with open(inputs.debug_output_file, "a") as myfile:
                     try:
                         myfile.write(f"\nAspect ratio at max_mode {max_mode}: {vmec.aspect()}")
