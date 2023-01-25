@@ -16,7 +16,7 @@ mkdir -p outputs
 nfp=4
 for ncoils in {3,4,5}; do \
     for len in {3.5,4.0,4.5,5.0}; do \
-        mpirun -np 25 ./main.py QH --MAXITER_stage_1 20 --MAXITER_stage_2 500 --MAXITER_single_stage 500 --max_modes 2 --ncoils $ncoils --lengthbound $len --vmec_input_start input.nfp${nfp}_QH_optimized > outputs/QH_nfp${nfp}_length${len}_${ncoils}coils.txt &
+        mpirun -np 25 ./main.py QH --MAXITER_stage_1 20 --MAXITER_stage_2 500 --MAXITER_single_stage 500 --max_modes 2 3 --ncoils $ncoils --lengthbound $len --vmec_input_start input.nfp${nfp}_QH_optimized > outputs/QH_nfp${nfp}_length${len}_${ncoils}coils.txt &
     done
     wait
 done

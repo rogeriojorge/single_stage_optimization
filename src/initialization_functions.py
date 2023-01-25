@@ -45,6 +45,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     parser.add_argument("--stage2", dest="stage2", default=inputs.stage_2, action="store_true")
     parser.add_argument("--single_stage", dest="single_stage", default=inputs.single_stage, action="store_true")
     parser.add_argument('--max_modes', nargs='+',dest="max_modes", default=inputs.max_modes, type=int)
+    parser.add_argument("--FREE_TOP_BOTTOM_CNT", dest="FREE_TOP_BOTTOM_CNT", default=inputs.FREE_TOP_BOTTOM_CNT, action="store_true")
     if QAQHQICNTselected: args = parser.parse_args(sysargv[2:])
     else: args = parser.parse_args()
     inputs.use_half_period = args.use_half_period
@@ -69,6 +70,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     inputs.include_iota_target = args.include_iota_target
     inputs.aspect_ratio_target = args.aspect_ratio_target
     inputs.QAorQHorQIorCNT = QAorQHorQIorCNT
+    inputs.FREE_TOP_BOTTOM_CNT = args.FREE_TOP_BOTTOM_CNT
     if QAorQHorQIorCNT=='CNT': inputs.nphi = inputs.nphi_CNT
     stage_string = ''
     if args.stage1: stage_string+='1'
@@ -77,7 +79,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     if stage_string == '': stage_string = '123'
     inputs.name = f'{QAorQHorQIorCNT}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{int(args.ncoils)}'
     if not QAorQHorQIorCNT=='CNT': inputs.name += f'_nfp{args.vmec_input_start[9:10]}'
-    if QAorQHorQIorCNT=='CNT' and inputs.CIRCULAR_TOP_BOTTOM_CNT: inputs.name += f'_circular'
+    if QAorQHorQIorCNT=='CNT' and not inputs.FREE_TOP_BOTTOM_CNT: inputs.name += f'_circular'
     return inputs
 
 def create_results_folders(inputs):
@@ -126,7 +128,7 @@ def create_initial_coils(vmec, parent_path, coils_results_path, inputs, surf_ful
             currents = [Current(coil._current.x[0])*1e5 for coil in bs_temporary.coils]
             base_curves = curves[0:2]
             base_currents = currents[0:2]
-        if inputs.CIRCULAR_TOP_BOTTOM_CNT:
+        if not inputs.FREE_TOP_BOTTOM_CNT:
             base_curves[0].fix_all()
         rotcurve1 = RotatedCurve(base_curves[0], phi=2*np.pi/2, flip=True)
         rotcurrent1 = ScaledCurrent(base_currents[0],-1.e-5)*1.e5
