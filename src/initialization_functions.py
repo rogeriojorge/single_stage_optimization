@@ -77,6 +77,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     if stage_string == '': stage_string = '123'
     inputs.name = f'{QAorQHorQIorCNT}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{int(args.ncoils)}'
     if not QAorQHorQIorCNT=='CNT': inputs.name += f'_nfp{args.vmec_input_start[9:10]}'
+    if QAorQHorQIorCNT=='CNT' and inputs.CIRCULAR_TOP_BOTTOM_CNT: inputs.name += f'_circular'
     return inputs
 
 def create_results_folders(inputs):
