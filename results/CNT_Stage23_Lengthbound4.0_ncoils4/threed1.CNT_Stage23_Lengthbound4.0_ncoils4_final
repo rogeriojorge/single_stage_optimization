@@ -1,0 +1,98 @@
+ THIS IS PARVMEC (PARALLEL VMEC), VERSION 9.0
+ Lambda: Full Radial Mesh. L-Force: hybrid full/half.
+
+ COMPUTER:    OS:    RELEASE:   DATE = Jan 25,2023  TIME = 02:54:08
+ SHOT ID.: CNT_Stage23_Lengthbound4.0_ncoils4_final  SEQ. NO.:   0
+ TIME SLICE =    0. ms
+
+ COMPUTATION PARAMETERS: (u = theta, v = zeta)
+ ---------------------------------------------
+     ns     nu     nv     mu     mv
+     16     16     14      5      5
+
+ CONFIGURATION PARAMETERS:
+ ---------------------------------------
+    nfp      gamma      spres_ped    phiedge(wb)     curtor(A)        lRFP
+      2  0.000E+00      1.000E+00      4.900E-02     0.000E+00           F
+
+ RUN CONTROL PARAMETERS:
+ -----------------------
+  ncurr  niter   nsin  nstep  nvacskip      ftol     tcon0    lasym  lforbal lmove_axis lconm1
+      1   3000     16    200         1  1.00E-11  1.00E+00        F        F        T        T
+  mfilter_fbdy nfilter_fbdy lfull3d1out max_main_iterations lgiveup fgiveup
+           -1           -1           F                   1       F  3.0E+01
+
+ PRECONDITIONER CONTROL PARAMETERS:
+ ----------------------------------
+  precon_type   prec2d_threshold
+  NONE                  1.00E-30
+
+ MASS PROFILE COEFFICIENTS - newton/m**2 (EXPANSION IN NORMALIZED RADIUS):
+ PMASS parameterization type is 'power_series'
+ -----------------------------------
+
+
+ TOROIDAL CURRENT DENSITY (*V') COEFFICIENTS ac (EXPANSION IN NORMALIZED RADIUS):
+ PCURR parameterization type is 'power_series'
+ --------------------------------------
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00
+
+
+ NORMALIZED TOROIDAL FLUX COEFFICIENTS aphi (EXPANSION IN S):
+ -----------------------------------
+   1.000E+00
+
+ R-Z FOURIER BOUNDARY COEFFICIENTS AND MAGNETIC AXIS INITIAL GUESS
+ R = RBC*COS(m*u - n*v) + RBS*SIN(m*u - n*v), Z = ZBC*COS(m*u - n*v) + ZBS*SIN(m*u-n*v)
+ --------------------------------------------------------------------------------------
+   nb  mb     rbc         rbs         zbc         zbs       raxis(c)    raxis(s)    zaxis(c)    zaxis(s)
+    0   0  2.8064E-01  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    1   0  2.6145E-02  0.0000E+00  0.0000E+00  2.3421E-02  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    2   0  1.8139E-03  0.0000E+00  0.0000E+00  1.1701E-03  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    3   0 -1.7899E-04  0.0000E+00  0.0000E+00 -2.9871E-05  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    4   0  1.8047E-05  0.0000E+00  0.0000E+00 -1.8312E-05  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+   -4   1 -1.5225E-06  0.0000E+00  0.0000E+00  2.1567E-05
+   -3   1  4.9772E-04  0.0000E+00  0.0000E+00 -3.1071E-04
+   -2   1  2.1928E-03  0.0000E+00  0.0000E+00 -2.9537E-03
+   -1   1  1.6042E-02  0.0000E+00  0.0000E+00 -2.0942E-02
+    0   1  7.0117E-02  0.0000E+00  0.0000E+00 -1.0505E-01
+    1   1 -4.8448E-02  0.0000E+00  0.0000E+00 -2.6298E-02
+    2   1 -1.1028E-03  0.0000E+00  0.0000E+00 -1.6525E-03
+    3   1  1.7173E-05  0.0000E+00  0.0000E+00  6.4481E-05
+    4   1  2.2867E-05  0.0000E+00  0.0000E+00  8.7820E-06
+   -4   2  1.8336E-05  0.0000E+00  0.0000E+00 -7.1144E-06
+   -3   2  2.6986E-04  0.0000E+00  0.0000E+00 -2.0437E-04
+   -2   2  9.5338E-04  0.0000E+00  0.0000E+00 -1.0109E-03
+   -1   2  4.6337E-03  0.0000E+00  0.0000E+00 -4.0741E-03
+    0   2  6.2401E-03  0.0000E+00  0.0000E+00 -3.4561E-03
+    1   2  1.1553E-02  0.0000E+00  0.0000E+00 -1.6144E-03
+    2   2 -4.7509E-04  0.0000E+00  0.0000E+00  2.5246E-03
+    3   2  1.0995E-04  0.0000E+00  0.0000E+00 -1.0362E-05
+    4   2  2.2481E-06  0.0000E+00  0.0000E+00 -7.8706E-06
+   -4   3 -1.1388E-05  0.0000E+00  0.0000E+00  1.6171E-05
+   -3   3  5.2135E-05  0.0000E+00  0.0000E+00 -1.7833E-05
+   -2   3  3.0293E-04  0.0000E+00  0.0000E+00 -3.6988E-04
+   -1   3 -1.4818E-04  0.0000E+00  0.0000E+00 -2.1152E-04
+    0   3 -1.5099E-03  0.0000E+00  0.0000E+00 -1.5745E-04
+    1   3 -3.0541E-03  0.0000E+00  0.0000E+00 -4.6489E-03
+    2   3  2.8916E-04  0.0000E+00  0.0000E+00 -1.9215E-04
+    3   3  7.7719E-05  0.0000E+00  0.0000E+00  2.2479E-04
+    4   3 -2.6620E-05  0.0000E+00  0.0000E+00 -1.6827E-05
+   -4   4 -9.9444E-06  0.0000E+00  0.0000E+00  1.5279E-05
+   -3   4 -7.7050E-06  0.0000E+00  0.0000E+00  9.7311E-06
+   -2   4 -3.1235E-06  0.0000E+00  0.0000E+00  1.1918E-05
+   -1   4 -8.5491E-05  0.0000E+00  0.0000E+00  1.6035E-04
+    0   4  1.4999E-04  0.0000E+00  0.0000E+00  1.8796E-05
+    1   4  4.8405E-05  0.0000E+00  0.0000E+00  1.1438E-04
+    2   4 -5.7567E-05  0.0000E+00  0.0000E+00 -5.6125E-05
+    3   4  1.8778E-05  0.0000E+00  0.0000E+00 -1.7442E-05
+    4   4  1.7360E-05  0.0000E+00  0.0000E+00  8.3526E-06
+ FSQR, FSQZ = Normalized Physical Force Residuals
+ fsqr, fsqz = Preconditioned Force Residuals
+ -----------------------
+ BEGIN FORCE ITERATIONS
+ -----------------------
+
