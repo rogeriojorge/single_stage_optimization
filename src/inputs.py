@@ -38,6 +38,7 @@ MSC_THRESHOLD_QH = 14 # Threshold for the mean squared curvature penalty in the 
 ncoils_QH = 5 # Number of coils per half field period
 quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
+iota_target_QH = 0.7 # Target rotational transform iota
 aspect_ratio_target_QH = 7  # Target aspect ratio
 # QI
 vmec_input_start_QI = 'input.nfp1_QI' # VMEC input file that serves as a start for the optimization when there are no previous results
