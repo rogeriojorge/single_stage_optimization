@@ -386,43 +386,6 @@ if os.path.isfile(os.path.join(current_path, f"wout_{inputs.name}_final.nc")):
             plt.savefig(os.path.join(figures_results_path, "Boozxform_symplot_"+inputs.name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
             fig = plt.figure(); bx.modeplot(b1.bx, sqrts=True); plt.xlabel(r'$s=\psi/\psi_b$')
             plt.savefig(os.path.join(figures_results_path, "Boozxform_modeplot_"+inputs.name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-    if inputs.find_QFM_surface:
-        pprint("Obtain QFM surface")
-        R_qfm, Z_qfm, Raxis_qfm, Zaxis_qfm, vmec_qfm = field_from_coils_main(folder=current_path, OUT_DIR=figures_results_path, coils_folder=inputs.coils_folder,
-                            vmec_folder=vmec_results_path, mpi=mpi, nzeta=inputs.nzeta_Poincare, nradius=inputs.nradius_Poincare, tol_qfm = inputs.tol_qfm,
-                            maxiter_qfm = inputs.maxiter_qfm, constraint_weight = inputs.constraint_weight_qfm, ntheta=inputs.ntheta_vmec_qfm, name_manual=inputs.name,
-                            mpol_qfm = inputs.mpol_qfm, ntor_qfm = inputs.ntor_qfm, nphi_qfm = inputs.nphi_qfm, ntheta_qfm = inputs.ntheta_qfm, diagnose_QFM=False,
-                            # qfm_poincare_plot=False)
-                            qfm_poincare_plot=True, tmax_fl = inputs.tmax_fl_Poincare, degree = inputs.degree_Interpolated_field, tol_tracing = inputs.tol_tracing_Poincare)
-        if np.sum(R_qfm) != 0:
-            if inputs.vmec_plot_QFM_result:
-                vmecPlot2_main(file=os.path.join(current_path, f"wout_{inputs.name}_qfm.nc"), name=inputs.name+'_qfm', figures_folder=figures_results_path, coils_curves=curves)
-            if inputs.booz_xform_plot_QFM_result:
-                pprint('Creating Boozer class for vmec_qfm')
-                b1_qfm = Boozer(vmec_qfm, mpol=64, ntor=64)
-                pprint('Defining surfaces where to compute Boozer coordinates')
-                booz_surfaces_qfm = np.linspace(0,1,inputs.boozxform_nsurfaces,endpoint=False)
-                pprint(f' booz_surfaces={booz_surfaces_qfm}')
-                b1_qfm.register(booz_surfaces_qfm)
-                pprint('Running BOOZ_XFORM')
-                b1_qfm.run()
-                if mpi.proc0_world:
-                    b1_qfm.bx.write_boozmn(os.path.join(vmec_results_path,"boozmn_"+inputs.name+"_qfm.nc"))
-                    pprint("Plot BOOZ_XFORM")
-                    fig = plt.figure(); bx.surfplot(b1_qfm.bx, js=1,  fill=False, ncontours=35)
-                    plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+inputs.name+'_qfm.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-                    fig = plt.figure(); bx.surfplot(b1_qfm.bx, js=int(inputs.boozxform_nsurfaces/2), fill=False, ncontours=35)
-                    plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_2_"+inputs.name+'_qfm.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-                    fig = plt.figure(); bx.surfplot(b1_qfm.bx, js=inputs.boozxform_nsurfaces-1, fill=False, ncontours=35)
-                    plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_3_"+inputs.name+'_qfm.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-                    if inputs.name[0:2] == 'QH':
-                        helical_detail = True
-                    else:
-                        helical_detail = False
-                    fig = plt.figure(); bx.symplot(b1_qfm.bx, helical_detail = helical_detail, sqrts=True)
-                    plt.savefig(os.path.join(figures_results_path, "Boozxform_symplot_"+inputs.name+'_qfm.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-                    fig = plt.figure(); bx.modeplot(b1_qfm.bx, sqrts=True); plt.xlabel(r'$s=\psi/\psi_b$')
-                    plt.savefig(os.path.join(figures_results_path, "Boozxform_modeplot_"+inputs.name+'_qfm.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
 os.chdir(parent_path)
 # Stop the timer
 stop = time.time()
