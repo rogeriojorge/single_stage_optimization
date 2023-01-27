@@ -1,0 +1,36 @@
+[r131c15s01:45112] *** Process received signal ***
+[r131c15s01:45112] Signal: Segmentation fault (11)
+[r131c15s01:45112] Signal code: Invalid permissions (2)
+[r131c15s01:45112] Failing at address: 0x2ac7834bb000
+[r131c15s01:45112] [ 0] /lib64/libpthread.so.0(+0xf370)[0x2ac6e69c1370]
+[r131c15s01:45112] [ 1] /marconi/home/userexternal/rjorge00/.local/lib/python3.9/site-packages/booz_xform-0.0.7-py3.9-linux-x86_64.egg/booz_xform/_booz_xform.cpython-39-x86_64-linux-gnu.so(+0x26b0a)[0x2ac72b0eab0a]
+[r131c15s01:45112] [ 2] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyObject_MakeTpCall+0x80)[0x2ac6e606e1d0]
+[r131c15s01:45112] [ 3] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x69c9)[0x2ac6e6020999]
+[r131c15s01:45112] [ 4] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x66069)[0x2ac6e6019069]
+[r131c15s01:45112] [ 5] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x12290a)[0x2ac6e60d590a]
+[r131c15s01:45112] [ 6] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x122a6f)[0x2ac6e60d5a6f]
+[r131c15s01:45112] [ 7] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyNumber_Add+0x93)[0x2ac6e6052e23]
+[r131c15s01:45112] [ 8] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x1df0)[0x2ac6e601bdc0]
+[r131c15s01:45112] [ 9] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1a674c)[0x2ac6e615974c]
+[r131c15s01:45112] [10] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyFunction_Vectorcall+0x9d)[0x2ac6e606df3d]
+[r131c15s01:45112] [11] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x697f)[0x2ac6e602094f]
+[r131c15s01:45112] [12] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1a674c)[0x2ac6e615974c]
+[r131c15s01:45112] [13] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalCodeWithName+0x4e)[0x2ac6e6159c6e]
+[r131c15s01:45112] [14] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyEval_EvalCodeEx+0x3e)[0x2ac6e6159cbe]
+[r131c15s01:45112] [15] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyEval_EvalCode+0x1b)[0x2ac6e6159ceb]
+[r131c15s01:45112] [16] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1e7065)[0x2ac6e619a065]
+[r131c15s01:45112] [17] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyRun_SimpleFileExFlags+0x188)[0x2ac6e619ba88]
+[r131c15s01:45112] [18] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(Py_RunMain+0x757)[0x2ac6e61b8587]
+[r131c15s01:45112] [19] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(Py_BytesMain+0x43)[0x2ac6e61b8a23]
+[r131c15s01:45112] [20] /lib64/libc.so.6(__libc_start_main+0xf5)[0x2ac6e72f8b35]
+[r131c15s01:45112] [21] python3[0x40110e]
+[r131c15s01:45112] *** End of error message ***
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun noticed that process rank 9 with PID 45112 on node r131c15s01 exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=6 ntor=6)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=6 ntor=6)>
