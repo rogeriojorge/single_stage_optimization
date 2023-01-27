@@ -200,6 +200,7 @@ class single_stage_obj_and_der():
 # Loop over the number of predefined maximum poloidal/toroidal modes
 if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
     oustr_dict_outer=[]
+    ran_stage1 = False # Only running stage1 optimization once
     previous_max_mode=0
     for max_mode in inputs.max_modes:
         if max_mode != previous_max_mode: oustr_dict_inner=[]
@@ -215,6 +216,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
             pprint(f'  Performing Stage 1 optimization with {inputs.MAXITER_stage_1} iterations')
             least_squares_mpi_solve(prob, mpi, grad=True, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, max_nfev=inputs.MAXITER_stage_1, ftol=inputs.ftol)
             os.chdir(current_path)
+            vmec.write_input(os.path.join(current_path, f'input.stage1'))
             if mpi.proc0_world:
                 with open(inputs.debug_output_file, "a") as myfile:
                     try:
@@ -224,6 +226,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
+            ran_stage1 = True
         # Stage 2 Optimization
         if (inputs.stage_2 and inputs.stage_1) or previous_max_mode==0:
             pprint(f'  Performing Stage 2 optimization with {inputs.MAXITER_stage_2+inputs.MAXITER_stage_2_simple} iterations')
@@ -239,6 +242,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
+            mpi.comm_world.Bcast(dofs, root=0)
         # Single stage Optimization
         if inputs.single_stage:
             pprint(f'  Performing Single Stage optimization with {inputs.MAXITER_single_stage} iterations')
@@ -256,6 +260,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                             myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                         except Exception as e:
                             myfile.write(e)
+            mpi.comm_world.Bcast(dofs, root=0)
         # Stage 2 Optimization after single_stage
         if (inputs.stage_2 and inputs.single_stage) or (inputs.stage_2 and not inputs.single_stage and not inputs.stage_1 and not previous_max_mode==0):
             pprint(f'  Performing Stage 2 optimization with {inputs.MAXITER_stage_2+inputs.MAXITER_stage_2_simple} iterations')
@@ -271,6 +276,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
+            mpi.comm_world.Bcast(dofs, root=0)
         if mpi.proc0_world:
             pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf.unitnormal(), axis=2)[:, :, None]}
             surf_full_boundary.x = surf.x

@@ -6,27 +6,33 @@ import shutil
 import argparse
 import numpy as np
 from mpi4py import MPI
-comm = MPI.COMM_WORLD
 import booz_xform as bx
 from pathlib import Path
-parent_path = str(Path(__file__).parent.resolve())
 from math import ceil, sqrt
 import matplotlib.pyplot as plt
 from simsopt import load
-from simsopt.mhd import Vmec, Boozer
+from simsopt.mhd import Vmec, Boozer, VirtualCasing
 from simsopt.geo import QfmSurface, SurfaceRZFourier
 from simsopt.geo import QfmResidual, Volume, curves_to_vtk
 from simsopt.field import particles_to_vtk, compute_fieldlines
 import logging
+from coilpy import Coil
+from simsopt.util import MpiPartition
+parent_path = str(Path(__file__).parent.resolve())
+mpi = MpiPartition()
+comm = MPI.COMM_WORLD
 logging.basicConfig()
 logger = logging.getLogger('PlotSingleStage')
 logger.setLevel(1)
 def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
-
+################## INPUT PARAMETERS ########################
 parser = argparse.ArgumentParser()
 parser.add_argument("--configuration",default='QA_Stage123_Lengthbound4.0_ncoils4_nfp2')
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
+parser.add_argument("--whole_torus", dest="whole_torus", default=False, action="store_true")
+parser.add_argument("--ncoils", type=int, default=4)
+parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=8)
 parser.add_argument("--tmax_fl", type=int, default=400)
@@ -34,6 +40,8 @@ parser.add_argument("--nphi_QFM", type=int, default=38)
 parser.add_argument("--ntheta_QFM", type=int, default=38)
 parser.add_argument("--mpol", type=int, default=18)
 parser.add_argument("--ntor", type=int, default=18)
+parser.add_argument("--nphi", type=int, default=256)
+parser.add_argument("--ntheta", type=int, default=128)
 parser.add_argument("--tol_qfm", type=float, default=1e-14)
 parser.add_argument("--tol_poincare", type=float, default=1e-14)
 parser.add_argument("--maxiter_qfm", type=int, default=1000)
@@ -41,15 +49,41 @@ parser.add_argument("--constraint_weight", type=float, default=1e+0)
 parser.add_argument("--ntheta_VMEC", type=int, default=300)
 parser.add_argument("--boozxform_nsurfaces", type=int, default=10)
 parser.add_argument("--bs_file", default='biot_savart_opt.json')
+parser.add_argument("--filename_final", default='input.final')
+parser.add_argument("--filename_stage1", default='input.stage1')
+parser.add_argument("--outdir", default='coils')
+parser.add_argument("--vmec_ran_QFM", dest="vmec_ran_QFM", default=False, action="store_true")
+parser.add_argument("--finite_beta", dest="finite_beta", default=False, action="store_true")
 args = parser.parse_args()
-
+################## LOAD RESULTS ########################
 helical_detail = False
 this_path = os.path.join(parent_path, args.configuration)
 OUT_DIR = os.path.join(this_path, "output")
 os.chdir(this_path)
-bs = load(os.path.join(this_path, f"coils/{args.bs_file}"))
-
-vmec_ran_QFM = False
+bs = load(os.path.join(this_path, f"{args.outdir}/{args.bs_file}"))
+################## FUNCTIONS ###########################
+def coilpy_plot(curves, filename, height=0.1, width=0.1):
+    def wrap(data):
+        return np.concatenate([data, [data[0]]])
+    xx = [wrap(c.gamma()[:, 0]) for c in curves]
+    yy = [wrap(c.gamma()[:, 1]) for c in curves]
+    zz = [wrap(c.gamma()[:, 2]) for c in curves]
+    II = [1. for _ in curves]
+    names = [i for i in range(len(curves))]
+    coils = Coil(xx, yy, zz, II, names, names)
+    coils.toVTK(filename, line=False, height=height, width=width)
+def trace_fieldlines(bfield, R0, Z0):
+    t1 = time.time()
+    phis = [(i/4)*(2*np.pi/nfp) for i in range(4)]
+    fieldlines_tys, fieldlines_phi_hits = compute_fieldlines(
+        bfield, R0, Z0, tmax=args.tmax_fl, tol=args.tol_poincare, comm=comm,
+        phis=phis, stopping_criteria=[])
+    t2 = time.time()
+    pprint(f"Time for fieldline tracing={t2-t1:.3f}s. Num steps={sum([len(l) for l in fieldlines_tys])//args.nfieldlines}", flush=True)
+    # if comm is None or comm.rank == 0:
+    #     particles_to_vtk(fieldlines_tys, os.path.join(OUT_DIR,f'fieldlines_optimized_coils'))
+    return fieldlines_tys, fieldlines_phi_hits, phis
+################## LOAD RESULTS ########################
 if args.create_QFM:
     vmec = Vmec(os.path.join(this_path,f'wout_final.nc'))
     s = SurfaceRZFourier.from_wout(os.path.join(this_path,f'wout_final.nc'), nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
@@ -174,18 +208,6 @@ if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
         plt.savefig(os.path.join(OUT_DIR, "Boozxform_modeplot_QFM.pdf"), bbox_inches = 'tight', pad_inches = 0); plt.close()
 
 if args.create_Poincare:
-    def trace_fieldlines(bfield, R0, Z0):
-        t1 = time.time()
-        phis = [(i/4)*(2*np.pi/nfp) for i in range(4)]
-        fieldlines_tys, fieldlines_phi_hits = compute_fieldlines(
-            bfield, R0, Z0, tmax=args.tmax_fl, tol=args.tol_poincare, comm=comm,
-            phis=phis, stopping_criteria=[])
-        t2 = time.time()
-        pprint(f"Time for fieldline tracing={t2-t1:.3f}s. Num steps={sum([len(l) for l in fieldlines_tys])//args.nfieldlines}", flush=True)
-        # if comm is None or comm.rank == 0:
-        #     particles_to_vtk(fieldlines_tys, os.path.join(OUT_DIR,f'fieldlines_optimized_coils'))
-        return fieldlines_tys, fieldlines_phi_hits, phis
-
     if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
         R0 = R[0,:,0]
         Z0 = Z[0,:,0]
@@ -236,51 +258,7 @@ if args.create_Poincare:
     plt.tight_layout()
     plt.savefig(os.path.join(OUT_DIR, f'poincare_QFM_fieldline_all.pdf'), bbox_inches = 'tight', pad_inches = 0)
 
-
-
-#!/usr/bin/env python3
-import os
-import numpy as np
-from coilpy import Coil
-from simsopt import load
-from simsopt.mhd import Vmec, VirtualCasing
-from simsopt.util import MpiPartition
-mpi = MpiPartition()
-
-# dir = 'optimization_CNT'
-dir = 'optimization_CNT_circular'
-whole_torus = True
-stage1 = False
-
-# dir = 'optimization_QH'
-# whole_torus = False
-# stage1 = True
-
-coils_stage1 = "biot_savart_inner_loop_max_mode_3.json"
-
-nphi = 256
-ntheta = 128
-ncoils = 4
-
-finite_beta = True
-
-if finite_beta: dir += '_finitebeta'
-filename_final = dir+'/input.final'
-filename_stage1 = dir+'/input.stage1'
-outdir = dir+'/coils/'
-
-def coilpy_plot(curves, filename, height=0.1, width=0.1):
-    def wrap(data):
-        return np.concatenate([data, [data[0]]])
-    xx = [wrap(c.gamma()[:, 0]) for c in curves]
-    yy = [wrap(c.gamma()[:, 1]) for c in curves]
-    zz = [wrap(c.gamma()[:, 2]) for c in curves]
-    II = [1. for _ in curves]
-    names = [i for i in range(len(curves))]
-    coils = Coil(xx, yy, zz, II, names, names)
-    coils.toVTK(filename, line=False, height=height, width=width)
-
-if whole_torus: vmec_final = Vmec(filename_final, mpi=mpi, verbose=True, nphi=nphi, ntheta=ntheta)
+if args.whole_torus: vmec_final = Vmec(filename_final, mpi=mpi, verbose=True, nphi=nphi, ntheta=ntheta)
 else: vmec_final = Vmec(filename_final, mpi=mpi, verbose=True, nphi=nphi, ntheta=ntheta, range_surface='half period')
 vmec_final.indata.ns_array[:3]    = [  16,     51,   101]
 vmec_final.indata.niter_array[:3] = [ 4000,  6000, 10000]
