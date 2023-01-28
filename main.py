@@ -210,6 +210,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         pprint(f'  Forming stage 2 objective function')
         JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, \
             J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY = form_stage_2_objective_function(surf, bs, base_curves, curves, inputs)
+        dofs = np.concatenate((JF.x, vmec.x))
         # Stage 1 Optimization
         if inputs.stage_1:
             os.chdir(vmec_results_path)
