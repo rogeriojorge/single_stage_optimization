@@ -33,23 +33,23 @@ logger.setLevel(1)
 def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
 ################## INPUT PARAMETERS ########################
 parser = argparse.ArgumentParser()
-parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.6_ncoils4_circular')
-parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_2.json')
+parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.8_ncoils4_circular')
+parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=8)
-parser.add_argument("--tmax_fl", type=int, default=400)
-parser.add_argument("--nphi_QFM", type=int, default=26)
-parser.add_argument("--ntheta_QFM", type=int, default=26)
-parser.add_argument("--mpol", type=int, default=8)
-parser.add_argument("--ntor", type=int, default=8)
+parser.add_argument("--tmax_fl", type=int, default=1600)
+parser.add_argument("--nphi_QFM", type=int, default=25)
+parser.add_argument("--ntheta_QFM", type=int, default=35)
+parser.add_argument("--mpol", type=int, default=16)
+parser.add_argument("--ntor", type=int, default=16)
 parser.add_argument("--nphi", type=int, default=256)
 parser.add_argument("--ntheta", type=int, default=128)
 parser.add_argument("--tol_qfm", type=float, default=1e-14)
 parser.add_argument("--tol_poincare", type=float, default=1e-14)
-parser.add_argument("--maxiter_qfm", type=int, default=1000)
+parser.add_argument("--maxiter_qfm", type=int, default=700)
 parser.add_argument("--constraint_weight", type=float, default=1e+0)
 parser.add_argument("--ntheta_VMEC", type=int, default=300)
 parser.add_argument("--boozxform_nsurfaces", type=int, default=10)
@@ -118,10 +118,10 @@ norm_stage1 = np.linalg.norm(s_stage1.normal().reshape((-1, 3)), axis=1)
 absb_stage1 = bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))
 Bbs_stage1 = bs_stage1.B().reshape((args.nphi, args.ntheta, 3))
 if args.finite_beta:
-    if args.whole_torus: BdotN_surf = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2) - vc_stage1.B_external_normal_extended
-    else: BdotN_surf = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2) - vc_stage1.B_external_normal
+    if args.whole_torus: BdotN_surf_stage1 = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2) - vc_stage1.B_external_normal_extended
+    else: BdotN_surf_stage1 = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2) - vc_stage1.B_external_normal
 else:
-    BdotN_surf = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2)
+    BdotN_surf_stage1 = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2)
 #### Single stage results ####
 if args.whole_torus: vmec_final = Vmec(filename_vmec_final, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, verbose=args.vmec_verbose)
 else: vmec_final = Vmec(filename_vmec_final, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period', verbose=args.vmec_verbose)
@@ -135,19 +135,19 @@ norm_final = np.linalg.norm(s_final.normal().reshape((-1, 3)), axis=1)
 absb_final = bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))
 Bbs_final = bs_final.B().reshape((args.nphi, args.ntheta, 3))
 if args.finite_beta:
-    if args.whole_torus: BdotN_surf = np.sum(Bbs_final * s_final.unitnormal(), axis=2) - vc_final.B_external_normal_extended
-    else: BdotN_surf = np.sum(Bbs_final * s_final.unitnormal(), axis=2) - vc_final.B_external_normal
+    if args.whole_torus: BdotN_surf_final = np.sum(Bbs_final * s_final.unitnormal(), axis=2) - vc_final.B_external_normal_extended
+    else: BdotN_surf_final = np.sum(Bbs_final * s_final.unitnormal(), axis=2) - vc_final.B_external_normal
 else:
-    BdotN_surf = np.sum(Bbs_final * s_final.unitnormal(), axis=2)
+    BdotN_surf_final = np.sum(Bbs_final * s_final.unitnormal(), axis=2)
 ###### PLOTTING ######
 pprint('Plotting stage 1 surface and coils')
-pointData_stage1 = {"B·n/|B|": BdotN_surf[:, :, None]/absb_stage1, "|B|": bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))}
+pointData_stage1 = {"B·n": BdotN_surf_stage1[:, :, None]}
 if args.whole_torus: coilpy_plot([c.curve for c in bs_stage1.coils], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
 else: coilpy_plot([c.curve for c in bs_stage1.coils[0:ncoils]], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
 s_stage1.to_vtk(os.path.join(coils_directory,"surf_stage1Plot"), extra_data=pointData_stage1)
 # single stage
 pprint('Plotting single stage surface and coils')
-pointData_final = {"B·n/|B|": BdotN_surf[:, :, None]/absb_final, "|B|": bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))}
+pointData_final = {"B·n": BdotN_surf_final[:, :, None]}
 if args.whole_torus: coilpy_plot([c.curve for c in bs_final.coils], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 else: coilpy_plot([c.curve for c in bs_final.coils[0:ncoils]], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 s_final.to_vtk(os.path.join(coils_directory,"surf_optPlot"), extra_data=pointData_final)
@@ -209,7 +209,7 @@ if args.create_QFM:
     vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
     vmec_QFM.indata.am[0:10] = [0]*10
     vmec_QFM.write_input(os.path.join(this_path,f'input.qfm'))
-    vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'), verbose=args.vmec_verbose)
+    vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'), verbose=True)#args.vmec_verbose)
     try:
         vmec_QFM.run()
         vmec_ran_QFM = True
