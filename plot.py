@@ -30,7 +30,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.7_ncoils4_circular')
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_1.json')
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
-parser.add_argument("--create_QFM", dest="create_Poincare", default=False, action="store_true")
+parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=False, action="store_true")
 # parser.add_argument("--ncoils", type=int, default=4)
 parser.add_argument("--volume_scale", type=float, default=1.0)
@@ -50,13 +50,12 @@ parser.add_argument("--ntheta_VMEC", type=int, default=300)
 parser.add_argument("--boozxform_nsurfaces", type=int, default=10)
 parser.add_argument("--filename_final", default='input.final')
 parser.add_argument("--filename_stage1", default='input.stage1')
-parser.add_argument("--coils_directory", default='coils')
-parser.add_argument("--vmec_ran_QFM", dest="vmec_ran_QFM", default=False, action="store_true")
 parser.add_argument("--finite_beta", dest="finite_beta", default=False, action="store_true")
 args = parser.parse_args()
 filename_vmec_final = 'wout_final.nc'
 filename_bs_final = 'biot_savart_opt.json'
 results_parent_folder = 'results'
+coils_directory = 'coils'
 ################## FUNCTIONS ###########################
 def coilpy_plot(curves, filename, height=0.1, width=0.1):
     def wrap(data):
@@ -105,7 +104,7 @@ vmec_stage1.indata.niter_array[:3] = [ 2000,  3000, 20000]
 vmec_stage1.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
 s_stage1 = vmec_stage1.boundary
 if args.finite_beta: vc_stage1 = VirtualCasing.from_vmec(vmec_stage1, src_nphi=args.vc_src_nphi, src_ntheta=args.ntheta)
-bs_stage1 = load(os.path.join(args.coils_directory,args.coils_stage1))
+bs_stage1 = load(os.path.join(coils_directory,args.coils_stage1))
 B_on_surface_stage1 = bs_stage1.set_points(s_stage1.gamma().reshape((-1, 3))).AbsB()
 norm_stage1 = np.linalg.norm(s_stage1.normal().reshape((-1, 3)), axis=1)
 meanb_stage1 = np.mean(B_on_surface_stage1 * norm_stage1)/np.mean(norm_stage1)
@@ -119,13 +118,10 @@ else:
 #### Single stage results ####
 if args.whole_torus: vmec_final = Vmec(filename_vmec_final, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta)
 else: vmec_final = Vmec(filename_vmec_final, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period')
-vmec_final.indata.ns_array[:3]    = [  16,    51,    101]
-vmec_final.indata.niter_array[:3] = [ 2000,  3000, 20000]
-vmec_final.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
 s_final = vmec_final.boundary
 vc_src_nphi = int(args.nphi/2/vmec_final.indata.nfp) if args.whole_torus else args.nphi
 if args.finite_beta: vc_final = VirtualCasing.from_vmec(vmec_final, src_nphi=vc_src_nphi, src_ntheta=args.ntheta)
-bs_final = load(filename_bs_final)
+bs_final = load(os.path.join(coils_directory,filename_bs_final))
 B_on_surface_final = bs_final.set_points(s_final.gamma().reshape((-1, 3))).AbsB()
 norm_final = np.linalg.norm(s_final.normal().reshape((-1, 3)), axis=1)
 meanb_final = np.mean(B_on_surface_final * norm_final)/np.mean(norm_final)
@@ -139,15 +135,16 @@ else:
 ###### PLOTTING ######
 # stage 1
 pointData_stage1 = {"B·n/|B|": BdotN_surf[:, :, None]/absb_stage1, "|B|": bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))/meanb_stage1}
-if args.whole_torus: coilpy_plot([c.curve for c in bs_stage1.coils], os.path.join(args.coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
-else: coilpy_plot([c.curve for c in bs_stage1.coils[0:ncoils]], os.path.join(args.coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
-s_stage1.to_vtk(os.path.join(args.coils_directory,"surf_stage1Plot"), extra_data=pointData_stage1)
+if args.whole_torus: coilpy_plot([c.curve for c in bs_stage1.coils], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
+else: coilpy_plot([c.curve for c in bs_stage1.coils[0:ncoils]], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
+s_stage1.to_vtk(os.path.join(coils_directory,"surf_stage1Plot"), extra_data=pointData_stage1)
 # single stage
 pointData_final = {"B·n/|B|": BdotN_surf[:, :, None]/absb_final, "|B|": bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))/meanb_final}
-if args.whole_torus: coilpy_plot([c.curve for c in bs_final.coils], os.path.join(args.coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
-else: coilpy_plot([c.curve for c in bs_final.coils[0:ncoils]], os.path.join(args.coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
-s_final.to_vtk(os.path.join(args.coils_directory,"surf_optPlot"), extra_data=pointData_final)
+if args.whole_torus: coilpy_plot([c.curve for c in bs_final.coils], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
+else: coilpy_plot([c.curve for c in bs_final.coils[0:ncoils]], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
+s_final.to_vtk(os.path.join(coils_directory,"surf_optPlot"), extra_data=pointData_final)
 ##### CREATE QFM #####
+vmec_ran_QFM = False
 if args.create_QFM:
     s = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
     s.change_resolution(args.mpol, args.ntor)
