@@ -14,7 +14,7 @@ cd /marconi_scratch/userexternal/rjorge00/single_stage_optimization
 mkdir -p outputs
 
 for len in {3.4,3.6,3.8,4.0}; do \
-        mpirun -np 25 ./main.py CNT --MAXITER_stage_2 500 --MAXITER_single_stage 500 --max_modes 2 3 4 5 --lengthbound $len --FREE_TOP_BOTTOM_CNT > outputs/CNT_length${len}_noncircular.txt &
+        mpirun -np 25 ./main.py CNT --stage1 --stage2 --single_stage --MAXITER_stage_1 50 --MAXITER_stage_2 1500 --MAXITER_single_stage 500 --max_modes 3 --lengthbound $len --FREE_TOP_BOTTOM_CNT > outputs/CNT_length${len}_noncircular.txt &
 done
 wait
 

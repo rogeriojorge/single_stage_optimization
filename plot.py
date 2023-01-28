@@ -31,8 +31,7 @@ parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.7_ncoi
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_1.json')
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
-parser.add_argument("--whole_torus", dest="whole_torus", default=False, action="store_true")
-# parser.add_argument("--ncoils", type=int, default=4)
+parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=8)
 parser.add_argument("--tmax_fl", type=int, default=400)
@@ -51,6 +50,7 @@ parser.add_argument("--boozxform_nsurfaces", type=int, default=10)
 parser.add_argument("--filename_final", default='input.final')
 parser.add_argument("--filename_stage1", default='input.stage1')
 parser.add_argument("--finite_beta", dest="finite_beta", default=False, action="store_true")
+parser.add_argument("--vmec_verbose", dest="vmec_verbose", default=False, action="store_true")
 args = parser.parse_args()
 filename_vmec_final = 'wout_final.nc'
 filename_bs_final = 'biot_savart_opt.json'
@@ -97,8 +97,8 @@ this_path = os.path.join(parent_path, results_parent_folder, args.results_folder
 OUT_DIR = os.path.join(this_path, "output")
 os.chdir(this_path)
 #### Stage 1 for comparison ####
-if args.whole_torus: vmec_stage1 = Vmec(args.filename_stage1, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta)
-else: vmec_stage1 = Vmec(args.filename_stage1, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period')
+if args.whole_torus: vmec_stage1 = Vmec(args.filename_stage1, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, verbose=args.vmec_verbose)
+else: vmec_stage1 = Vmec(args.filename_stage1, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period', verbose=args.vmec_verbose)
 vmec_stage1.indata.ns_array[:3]    = [  16,    51,    101]
 vmec_stage1.indata.niter_array[:3] = [ 2000,  3000, 20000]
 vmec_stage1.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
@@ -107,7 +107,7 @@ if args.finite_beta: vc_stage1 = VirtualCasing.from_vmec(vmec_stage1, src_nphi=a
 bs_stage1 = load(os.path.join(coils_directory,args.coils_stage1))
 B_on_surface_stage1 = bs_stage1.set_points(s_stage1.gamma().reshape((-1, 3))).AbsB()
 norm_stage1 = np.linalg.norm(s_stage1.normal().reshape((-1, 3)), axis=1)
-meanb_stage1 = np.mean(B_on_surface_stage1 * norm_stage1)/np.mean(norm_stage1)
+# meanb_stage1 = np.mean(B_on_surface_stage1 * norm_stage1)/np.mean(norm_stage1)
 absb_stage1 = bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))
 Bbs_stage1 = bs_stage1.B().reshape((args.nphi, args.ntheta, 3))
 if args.finite_beta:
@@ -116,15 +116,15 @@ if args.finite_beta:
 else:
     BdotN_surf = np.sum(Bbs_stage1 * s_stage1.unitnormal(), axis=2)
 #### Single stage results ####
-if args.whole_torus: vmec_final = Vmec(filename_vmec_final, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta)
-else: vmec_final = Vmec(filename_vmec_final, mpi=mpi, verbose=True, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period')
+if args.whole_torus: vmec_final = Vmec(filename_vmec_final, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, verbose=args.vmec_verbose)
+else: vmec_final = Vmec(filename_vmec_final, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, range_surface='half period', verbose=args.vmec_verbose)
 s_final = vmec_final.boundary
-vc_src_nphi = int(args.nphi/2/vmec_final.indata.nfp) if args.whole_torus else args.nphi
+vc_src_nphi = int(args.nphi/2/vmec_final.wout.nfp) if args.whole_torus else args.nphi
 if args.finite_beta: vc_final = VirtualCasing.from_vmec(vmec_final, src_nphi=vc_src_nphi, src_ntheta=args.ntheta)
 bs_final = load(os.path.join(coils_directory,filename_bs_final))
 B_on_surface_final = bs_final.set_points(s_final.gamma().reshape((-1, 3))).AbsB()
 norm_final = np.linalg.norm(s_final.normal().reshape((-1, 3)), axis=1)
-meanb_final = np.mean(B_on_surface_final * norm_final)/np.mean(norm_final)
+# meanb_final = np.mean(B_on_surface_final * norm_final)/np.mean(norm_final)
 absb_final = bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))
 Bbs_final = bs_final.B().reshape((args.nphi, args.ntheta, 3))
 if args.finite_beta:
@@ -133,19 +133,21 @@ if args.finite_beta:
 else:
     BdotN_surf = np.sum(Bbs_final * s_final.unitnormal(), axis=2)
 ###### PLOTTING ######
-# stage 1
-pointData_stage1 = {"B·n/|B|": BdotN_surf[:, :, None]/absb_stage1, "|B|": bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))/meanb_stage1}
+pprint('Plotting stage 1 surface and coils')
+pointData_stage1 = {"B·n/|B|": BdotN_surf[:, :, None]/absb_stage1, "|B|": bs_stage1.AbsB().reshape(s_stage1.gamma().shape[:2] + (1,))}
 if args.whole_torus: coilpy_plot([c.curve for c in bs_stage1.coils], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
 else: coilpy_plot([c.curve for c in bs_stage1.coils[0:ncoils]], os.path.join(coils_directory,"coils_stage1Plot.vtu"), height=0.05, width=0.05)
 s_stage1.to_vtk(os.path.join(coils_directory,"surf_stage1Plot"), extra_data=pointData_stage1)
 # single stage
-pointData_final = {"B·n/|B|": BdotN_surf[:, :, None]/absb_final, "|B|": bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))/meanb_final}
+pprint('Plotting single stage surface and coils')
+pointData_final = {"B·n/|B|": BdotN_surf[:, :, None]/absb_final, "|B|": bs_final.AbsB().reshape(s_final.gamma().shape[:2] + (1,))}
 if args.whole_torus: coilpy_plot([c.curve for c in bs_final.coils], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 else: coilpy_plot([c.curve for c in bs_final.coils[0:ncoils]], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 s_final.to_vtk(os.path.join(coils_directory,"surf_optPlot"), extra_data=pointData_final)
 ##### CREATE QFM #####
 vmec_ran_QFM = False
 if args.create_QFM:
+    pprint('Finding QFM surface')
     s = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
     s.change_resolution(args.mpol, args.ntor)
     s_original_VMEC = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
@@ -191,7 +193,7 @@ if args.create_QFM:
 
     # Create QFM VMEC equilibrium
     os.chdir(OUT_DIR)
-    vmec_QFM = Vmec(os.path.join(this_path,f'input.final'))
+    vmec_QFM = Vmec(os.path.join(this_path,f'input.final'), verbose=args.vmec_verbose)
     vmec_QFM.indata.mpol = args.mpol
     vmec_QFM.indata.ntor = args.ntor
     vmec_QFM.boundary = s
@@ -200,7 +202,7 @@ if args.create_QFM:
     vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
     vmec_QFM.indata.am[0:10] = [0]*10
     vmec_QFM.write_input(os.path.join(this_path,f'input.qfm'))
-    vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'))
+    vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'), verbose=args.vmec_verbose)
     try:
         vmec_QFM.run()
         vmec_ran_QFM = True
@@ -214,7 +216,7 @@ if args.create_QFM:
         print(e)
 
 if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
-    vmec_QFM = Vmec(os.path.join(this_path,f'wout_QFM.nc'))
+    vmec_QFM = Vmec(os.path.join(this_path,f'wout_QFM.nc'), verbose=args.vmec_verbose)
     nfp = vmec_QFM.wout.nfp
     sys.path.insert(1, os.path.join(parent_path, '../single_stage/plotting'))
     if vmec_ran_QFM or not os.path.isfile(os.path.join(OUT_DIR, "QFM_VMECparams.pdf")):
@@ -231,7 +233,7 @@ if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
     Zaxis = np.zeros(nzeta)
     phis = zeta
 
-    pprint("Obtain VMEC QFM surfaces")
+    pprint("Obtaining VMEC QFM surfaces")
     for itheta in range(args.ntheta_VMEC):
         for izeta in range(nzeta):
             for iradius in range(args.nfieldlines):
@@ -318,11 +320,11 @@ if args.create_Poincare:
     plt.tight_layout()
     plt.savefig(os.path.join(OUT_DIR, f'poincare_QFM_fieldline_all.pdf'), bbox_inches = 'tight', pad_inches = 0)
 
-files_to_remove = ['input.final_000_000000','input.stage1_000_000000','parvmecinfo.txt','threed1.final','threed1.stage1',
-                   'vcasing_final_000_000000.nc','vcasing_stage1_000_000000.nc','wout_final_000_000000.nc','wout_stage1_000_000000.nc']
-for file in files_to_remove:
-    try: os.remove(file)
-    except Exception as e: pprint(e)
+# files_to_remove = ['input.final_000_000000','input.stage1_000_000000','parvmecinfo.txt','threed1.final','threed1.stage1',
+#                    'vcasing_final_000_000000.nc','vcasing_stage1_000_000000.nc','wout_final_000_000000.nc','wout_stage1_000_000000.nc']
+# for file in files_to_remove:
+#     try: os.remove(file)
+#     except Exception as e: pprint(e)
 
-pprint(f"Created coils_optPlot.vtu, surf_optPlot.vts, coils_stage1Plot.vtu and surf_stage1Plot.vts in directory {OUT_DIR}")
+# pprint(f"Created coils_optPlot.vtu, surf_optPlot.vts, coils_stage1Plot.vtu and surf_stage1Plot.vts in directory {OUT_DIR}")
 
