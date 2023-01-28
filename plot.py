@@ -10,11 +10,17 @@ import booz_xform as bx
 from pathlib import Path
 from math import ceil, sqrt
 import matplotlib.pyplot as plt
+from src.vmecPlot2 import main as vmecPlot2_main
 from simsopt import load
 from simsopt.mhd import Vmec, Boozer, VirtualCasing
 from simsopt.geo import QfmSurface, SurfaceRZFourier
 from simsopt.geo import QfmResidual, Volume, curves_to_vtk
 from simsopt.field import particles_to_vtk, compute_fieldlines
+import matplotlib
+import warnings
+import matplotlib.cbook
+matplotlib.use('Agg') 
+warnings.filterwarnings("ignore",category=matplotlib.MatplotlibDeprecationWarning)
 import logging
 from coilpy import Coil
 from simsopt.util import MpiPartition
@@ -29,16 +35,16 @@ def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
 parser = argparse.ArgumentParser()
 parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.6_ncoils4_circular')
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_2.json')
-parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
+parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=8)
 parser.add_argument("--tmax_fl", type=int, default=400)
-parser.add_argument("--nphi_QFM", type=int, default=38)
-parser.add_argument("--ntheta_QFM", type=int, default=38)
-parser.add_argument("--mpol", type=int, default=18)
-parser.add_argument("--ntor", type=int, default=18)
+parser.add_argument("--nphi_QFM", type=int, default=26)
+parser.add_argument("--ntheta_QFM", type=int, default=26)
+parser.add_argument("--mpol", type=int, default=8)
+parser.add_argument("--ntor", type=int, default=8)
 parser.add_argument("--nphi", type=int, default=256)
 parser.add_argument("--ntheta", type=int, default=128)
 parser.add_argument("--tol_qfm", type=float, default=1e-14)
@@ -95,6 +101,7 @@ helical_detail = helical_detail_function(args.results_folder)
 #### Go to results folder ####
 this_path = os.path.join(parent_path, results_parent_folder, args.results_folder)
 OUT_DIR = os.path.join(this_path, "output")
+if mpi.proc0_world: Path(OUT_DIR).mkdir(parents=True, exist_ok=True)
 os.chdir(this_path)
 #### Stage 1 for comparison ####
 if args.whole_torus: vmec_stage1 = Vmec(args.filename_stage1, mpi=mpi, nphi=args.nphi, ntheta=args.ntheta, verbose=args.vmec_verbose)
@@ -220,8 +227,7 @@ if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
     nfp = vmec_QFM.wout.nfp
     sys.path.insert(1, os.path.join(parent_path, '../single_stage/plotting'))
     if vmec_ran_QFM or not os.path.isfile(os.path.join(OUT_DIR, "QFM_VMECparams.pdf")):
-        import vmecPlot2
-        vmecPlot2.main(file=os.path.join(this_path, f"wout_QFM.nc"), name='QFM', figures_folder=OUT_DIR)
+        vmecPlot2_main(file=os.path.join(this_path, f"wout_QFM.nc"), name='QFM', figures_folder=OUT_DIR)
     nzeta=4
     zeta = np.linspace(0,2*np.pi/nfp,num=nzeta,endpoint=False)
     theta = np.linspace(0,2*np.pi,num=args.ntheta_VMEC)
