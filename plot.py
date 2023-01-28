@@ -56,6 +56,7 @@ parser.add_argument("--finite_beta", dest="finite_beta", default=False, action="
 args = parser.parse_args()
 filename_vmec_final = 'wout_final.nc'
 filename_bs_final = 'biot_savart_opt.json'
+results_parent_folder = 'results'
 ################## FUNCTIONS ###########################
 def coilpy_plot(curves, filename, height=0.1, width=0.1):
     def wrap(data):
@@ -93,7 +94,7 @@ def helical_detail_function(string):
 ncoils = find_ncoils(args.results_folder)
 helical_detail = helical_detail_function(args.results_folder)
 #### Go to results folder ####
-this_path = os.path.join(parent_path, args.results_folder)
+this_path = os.path.join(parent_path, results_parent_folder, args.results_folder)
 OUT_DIR = os.path.join(this_path, "output")
 os.chdir(this_path)
 #### Stage 1 for comparison ####

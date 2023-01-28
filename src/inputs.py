@@ -112,7 +112,7 @@ quasisymmetry_helicity_m = 1 # Poloidal quasisymmetry integer M in |B|
 iota_weight = 1e2 # Weight for the rotational transform objective
 finite_difference_rel_step = 1e-3 # Relative step size for the stage 1 finite difference
 finite_difference_abs_step = 1e-4 # Absolute step size for the stage 1 finite difference
-diff_method = "centered" # "forward" # "centered"
+diff_method = "forward" # "forward" # "centered"
 ftol = 1e-5 # threshold to end optimization
 # Stage 2 optimization parameters
 coils_objective_weight = 1e+3 # Scale of stage 2 objective with respect to stage 1 objective

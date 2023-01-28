@@ -81,8 +81,8 @@ pprint("============================================")
 ######################################################
 # Check if a previous optimization has already taken place and load it if exists
 vmec_files_list = os.listdir(vmec_results_path)
-if os.path.exists(os.path.join(current_path, f'input.{inputs.name}_final')):
-    vmec_input_filename = os.path.join(current_path, f'input.{inputs.name}_final')
+if os.path.exists(os.path.join(current_path, f'input.final')):
+    vmec_input_filename = os.path.join(current_path, f'input.final')
 elif len(vmec_files_list)==0:
     vmec_input_filename = os.path.join(parent_path, 'vmec_inputs', inputs.vmec_input_start)
 else:
@@ -320,11 +320,11 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         surf_full_boundary.to_vtk(os.path.join(coils_results_path,inputs.resulting_surface), extra_data=pointData)
         curves_to_vtk(curves, os.path.join(coils_results_path,inputs.resulting_coils))
         bs.save(os.path.join(coils_results_path,inputs.resulting_field_json))
-        vmec.write_input(os.path.join(current_path, f'input.{inputs.name}_final'))
+        vmec.write_input(os.path.join(current_path, f'input.final'))
         if inputs.single_stage:
             try:
                 df = pd.DataFrame(oustr_dict_outer)
-                df.to_csv(os.path.join(current_path, f'output_{inputs.name}_final.csv'), index_label='index')
+                df.to_csv(os.path.join(current_path, f'output_final.csv'), index_label='index')
                 ax=df.plot(kind='line',
                     logy=True,
                     y=['J','Jf','J_length','J_CC','J_CURVATURE','J_MSC','J_ALS','J_LENGTH_PENALTY','Jquasisymmetry', 'Jiota','Jaspect'],#,'C-C-Sep','C-S-Sep'],
@@ -349,24 +349,24 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
 os.chdir(current_path)
 if inputs.create_wout_final:
     try:
-        vmec_final = Vmec(os.path.join(current_path, f'input.{inputs.name}_final'))
+        vmec_final = Vmec(os.path.join(current_path, f'input.final'))
         vmec_final.indata.ns_array[:3]    = [  16,    51,    101]
         vmec_final.indata.niter_array[:3] = [ 2000,  3000, 20000]
         vmec_final.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
         vmec_final.run()
         if mpi.proc0_world:
-            shutil.move(os.path.join(current_path, f"wout_{inputs.name}_final_000_000000.nc"), os.path.join(current_path, f"wout_{inputs.name}_final.nc"))
-            os.remove(os.path.join(current_path, f'input.{inputs.name}_final_000_000000'))
+            shutil.move(os.path.join(current_path, f"wout_final_000_000000.nc"), os.path.join(current_path, f"wout_final.nc"))
+            os.remove(os.path.join(current_path, f'input.final_000_000000'))
     except Exception as e:
         pprint('Exception when creating final vmec file:')
         pprint(e)
 ## Create results figures
-if os.path.isfile(os.path.join(current_path, f"wout_{inputs.name}_final.nc")):
+if os.path.isfile(os.path.join(current_path, f"wout_final.nc")):
     pprint('Found final vmec file')
     if mpi.proc0_world:
         if inputs.vmec_plot_result:
             pprint("Plot VMEC result")
-            vmecPlot2_main(file=os.path.join(current_path, f"wout_{inputs.name}_final.nc"), name=inputs.name, figures_folder=figures_results_path, coils_curves=curves)
+            vmecPlot2_main(file=os.path.join(current_path, f"wout_final.nc"), name=inputs.name, figures_folder=figures_results_path, coils_curves=curves)
     if inputs.booz_xform_plot_result:
         pprint('Creating Boozer class for vmec_final')
         b1 = Boozer(vmec_final, mpol=64, ntor=64)
