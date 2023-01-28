@@ -17,7 +17,7 @@ LENGTHBOUND_CNT_BIG = 7.0 # Length of each of the two bigger CNT optimization co
 CURVATURE_THRESHOLD_CNT_BIG = 3.5 # Threshold for the curvature penalty in the objective function for each of the two bigger CNT optimization coils
 MSC_THRESHOLD_CNT_BIG = 4.5 # Threshold for the mean squared curvature penalty in the objective function for each of the two bigger CNT optimization coils
 FREE_TOP_BOTTOM_CNT = False # Do not keep the two bigger CNT optimization coils circular and optimize them together the two interlinking coils
-order_CNT = 10 # Number of Fourier modes describing each Cartesian component of each coil in CNT
+order_CNT = 6 # Number of Fourier modes describing each Cartesian component of each coil in CNT
 # QA
 vmec_input_start_QA = 'input.nfp2_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QA = 4 # Threshold for the length of each coil
