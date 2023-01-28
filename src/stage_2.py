@@ -54,7 +54,7 @@ def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
     
     return JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist(), Jf, J_LENGTH, J_CC, J_CS(), J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY
 
-def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path, surf_full_boundary):
+def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY, vmec, curves, base_curves, surf, coils_results_path, number_vmec_dofs, bs, max_mode, inputs, figures_results_path, surf_full_boundary, write_coils=True):
 
     def fun_coils_simple(dofss, info, oustr_dict=[]):
         info['Nfeval'] += 1
@@ -127,10 +127,11 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
 
     dofs = np.concatenate((JF.x, vmec.x))
     oustr_dict=[]
-    curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_before_inner_loop_max_mode_{max_mode}"))
-    bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
-    pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
-    surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_before_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
+    if write_coils:
+        bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
+        curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_before_inner_loop_max_mode_{max_mode}"))
+        pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
+        surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_before_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
     pprint(f'\n  Running simple intermediate coil loop with {inputs.MAXITER_stage_2_simple} iterations:')
     info_simple={'Nfeval':0}
     bs.set_points(surf.gamma().reshape((-1, 3)))
@@ -143,21 +144,22 @@ def inner_coil_loop(mpi, JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENG
     res = minimize(fun_coils, dofs[:-number_vmec_dofs], jac=True, args=(info_not_simple,oustr_dict), method='L-BFGS-B', options={'maxiter': inputs.MAXITER_stage_2, 'maxcor': 300}, tol=1e-10)
     dofs[:-number_vmec_dofs] = res.x
     JF.x = dofs[:-number_vmec_dofs]
-    curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_after_inner_loop_max_mode_{max_mode}"))
-    bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
-    pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
-    surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_after_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
-    bs.set_points(surf.gamma().reshape((-1, 3)))
-    bs.save(os.path.join(coils_results_path,f"biot_savart_inner_loop_max_mode_{max_mode}.json"))
-    df = pd.DataFrame(oustr_dict)
-    df.to_csv(f'output_stage2_max_mode_{max_mode}.csv', index_label='index')
-    ax=df.plot(kind='line', logy=True, y=['J','Jf','J_length','J_CC','J_CURVATURE','J_MSC','J_ALS','J_LENGTH_PENALTY','C-C-Sep'], linewidth=0.8)
-    ax.set_ylim(bottom=1e-9, top=None)
-    ax.set_xlabel('Number of function evaluations')
-    ax.set_ylabel('Objective function')
-    plt.axvline(x=info_simple['Nfeval'], linestyle='dashed', color='k', label='simple-loop', linewidth=0.8)
-    plt.legend(loc=3, prop={'size': 6})
-    plt.tight_layout()
-    plt.savefig(os.path.join(figures_results_path, f'optimization_stage2_max_mode_{max_mode}.pdf'), bbox_inches = 'tight', pad_inches = 0)
+    if write_coils:
+        curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_after_inner_loop_max_mode_{max_mode}"))
+        bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
+        pointData = {"B_N": np.sum(bs.B().reshape((inputs.nphi, inputs.ntheta, 3)) * surf_full_boundary.unitnormal(), axis=2)[:, :, None]}
+        surf_full_boundary.to_vtk(os.path.join(coils_results_path, f"surf_after_inner_loop_max_mode_{max_mode}"), extra_data=pointData)
+        bs.set_points(surf.gamma().reshape((-1, 3)))
+        bs.save(os.path.join(coils_results_path,f"biot_savart_inner_loop_max_mode_{max_mode}.json"))
+        df = pd.DataFrame(oustr_dict)
+        df.to_csv(f'output_stage2_max_mode_{max_mode}.csv', index_label='index')
+        ax=df.plot(kind='line', logy=True, y=['J','Jf','J_length','J_CC','J_CURVATURE','J_MSC','J_ALS','J_LENGTH_PENALTY','C-C-Sep'], linewidth=0.8)
+        ax.set_ylim(bottom=1e-9, top=None)
+        ax.set_xlabel('Number of function evaluations')
+        ax.set_ylabel('Objective function')
+        plt.axvline(x=info_simple['Nfeval'], linestyle='dashed', color='k', label='simple-loop', linewidth=0.8)
+        plt.legend(loc=3, prop={'size': 6})
+        plt.tight_layout()
+        plt.savefig(os.path.join(figures_results_path, f'optimization_stage2_max_mode_{max_mode}.pdf'), bbox_inches = 'tight', pad_inches = 0)
 
     return dofs, bs, JF

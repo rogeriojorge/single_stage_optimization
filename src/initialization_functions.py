@@ -26,6 +26,7 @@ except ImportError:
 def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     parser.add_argument("--use_half_period", dest="use_half_period", default=inputs.use_half_period, action="store_true")
     parser.add_argument("--finite_beta", dest="finite_beta", default=inputs.finite_beta, action="store_true")
+    parser.add_argument("--diff_method", default=inputs.diff_method)
     parser.add_argument("--ncoils", type=float,               default=inputs.ncoils_QA if QAorQHorQIorCNT=='QA' else inputs.ncoils_QH           if QAorQHorQIorCNT=='QH' else inputs.ncoils_QI           if QAorQHorQIorCNT=='QI' else 4)
     parser.add_argument("--vmec_input_start",       default=inputs.vmec_input_start_QA if QAorQHorQIorCNT=='QA' else inputs.vmec_input_start_QH if QAorQHorQIorCNT=='QH' else inputs.vmec_input_start_QI if QAorQHorQIorCNT=='QI' else inputs.vmec_input_start_CNT)
     parser.add_argument("--lengthbound",   type=float,  default=inputs.LENGTHBOUND_QA  if QAorQHorQIorCNT=='QA' else inputs.LENGTHBOUND_QH      if QAorQHorQIorCNT=='QH' else inputs.LENGTHBOUND_QI      if QAorQHorQIorCNT=='QI' else inputs.LENGTHBOUND_CNT     )
@@ -57,6 +58,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     inputs.MAXITER_stage_2 = args.MAXITER_stage_2
     inputs.MAXITER_single_stage = args.MAXITER_single_stage
     inputs.iota_target = args.iota_target
+    inputs.diff_method = args.diff_method
     inputs.ncoils = int(args.ncoils)
     inputs.LENGTHBOUND = args.lengthbound
     inputs.CC_THRESHOLD = args.cc_threshold
