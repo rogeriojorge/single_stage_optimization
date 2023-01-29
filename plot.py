@@ -33,7 +33,7 @@ logger.setLevel(1)
 def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
 ################## INPUT PARAMETERS ########################
 parser = argparse.ArgumentParser()
-parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.9_ncoils4_circular')
+parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.8_ncoils4')
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
