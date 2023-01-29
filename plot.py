@@ -39,8 +39,8 @@ parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="st
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
-parser.add_argument("--nfieldlines", type=int, default=8)
-parser.add_argument("--tmax_fl", type=int, default=1800)
+parser.add_argument("--nfieldlines", type=int, default=12)
+parser.add_argument("--tmax_fl", type=int, default=2500)
 parser.add_argument("--nphi_QFM", type=int, default=25)
 parser.add_argument("--ntheta_QFM", type=int, default=35)
 parser.add_argument("--mpol", type=int, default=16)
@@ -51,7 +51,7 @@ parser.add_argument("--tol_qfm", type=float, default=1e-14)
 parser.add_argument("--tol_poincare", type=float, default=1e-14)
 parser.add_argument("--maxiter_qfm", type=int, default=1000)
 parser.add_argument("--constraint_weight", type=float, default=1e+0)
-parser.add_argument("--ntheta_VMEC", type=int, default=300)
+parser.add_argument("--ntheta_VMEC", type=int, default=80)
 parser.add_argument("--boozxform_nsurfaces", type=int, default=10)
 parser.add_argument("--filename_final", default='input.final')
 parser.add_argument("--filename_stage1", default='input.stage1')
@@ -223,6 +223,24 @@ if args.create_QFM:
         print(e)
 
 if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
+    nfp = vmec_final.wout.nfp
+    nzeta=4
+    zeta = np.linspace(0,2*np.pi/nfp,num=nzeta,endpoint=False)
+    theta = np.linspace(0,2*np.pi,num=args.ntheta_VMEC)
+    iradii = np.linspace(0,vmec_final.wout.ns-1,num=args.nfieldlines).round()
+    iradii = [int(i) for i in iradii]
+    R_final = np.zeros((nzeta,args.nfieldlines,args.ntheta_VMEC))
+    Z_final = np.zeros((nzeta,args.nfieldlines,args.ntheta_VMEC))
+    phis = zeta
+    pprint("Obtaining VMEC final surfaces")
+    for itheta in range(args.ntheta_VMEC):
+        for izeta in range(nzeta):
+            for iradius in range(args.nfieldlines):
+                for imode, xnn in enumerate(vmec_final.wout.xn):
+                    angle = vmec_final.wout.xm[imode]*theta[itheta] - xnn*zeta[izeta]
+                    R_final[izeta,iradius,itheta] += vmec_final.wout.rmnc[imode, iradii[iradius]]*np.cos(angle)
+                    Z_final[izeta,iradius,itheta] += vmec_final.wout.zmns[imode, iradii[iradius]]*np.sin(angle)
+
     vmec_QFM = Vmec(os.path.join(this_path,f'wout_QFM.nc'), verbose=args.vmec_verbose)
     nfp = vmec_QFM.wout.nfp
     sys.path.insert(1, os.path.join(parent_path, '../single_stage/plotting'))
@@ -304,25 +322,30 @@ if args.create_Poincare:
     z = np.array(z, dtype=object)
     pprint('Plotting Poincare plot')
     nrowcol = ceil(sqrt(len(phis)))
-    fig, axs = plt.subplots(nrowcol, nrowcol, figsize=(12, 8))
+    fig, axs = plt.subplots(nrowcol, nrowcol, figsize=(8, 8))
     for i in range(len(phis)):
         row = i//nrowcol
         col = i % nrowcol
-        axs[row, col].set_title(f"$\\phi = {phis[i]/np.pi:.3f}\\pi$ ", loc='right', y=0.0)
-        axs[row, col].set_xlabel("$R$")
-        axs[row, col].set_ylabel("$Z$")
+        axs[row, col].set_title(f"$\\phi={phis[i]/np.pi:.2f}\\pi$", loc='right', y=0.0, fontsize=10)
+        axs[row, col].set_xlabel("$R$", fontsize=14)
+        axs[row, col].set_ylabel("$Z$", fontsize=14)
         axs[row, col].set_aspect('equal')
         axs[row, col].tick_params(direction="in")
         for j in range(args.nfieldlines):
             if j== 0 and i == 0:
-                legend1 = 'Poincare plot'
-                legend2 = 'VMEC QFM'
+                legend1 = 'Poincare'
+                legend2 = 'QFM'
+                legend3 = 'Single-Stage'
             else:
-                legend1 = legend2 = '_nolegend_'
-            try: axs[row, col].scatter(r[i][j], z[i][j], marker='o', s=0.7, linewidths=0, c='b', label = legend1)
-            except Exception as e: pprint(e, i, j)
+                legend1 = legend2 = legend3 = '_nolegend_'
             if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
-                axs[row, col].scatter(R[i,j], Z[i,j], marker='o', s=0.7, linewidths=0, c='r', label = legend2)
+                axs[row, col].plot(R[i,j,:], Z[i,j,:], '-', linewidth=1.2, c='r', label = legend2)
+                axs[row, col].plot(R_final[i,j,:], Z_final[i,j,:], '-', linewidth=1.2, c='k', label = legend3)
+            try: axs[row, col].scatter(r[i][j], z[i][j], marker='o', s=1.3, linewidths=1.3, c='b', label = legend1)
+            except Exception as e: pprint(e, i, j)
+            # if j == 0: axs[row, col].legend(loc="upper right")
+    # plt.legend(bbox_to_anchor=(0.1, 0.9 ))
+    leg = fig.legend(loc='upper center', bbox_to_anchor=(0.5, 1.05), ncol=4, fontsize=12)
     plt.tight_layout()
     plt.savefig(os.path.join(OUT_DIR, f'poincare_QFM_fieldline_all.pdf'), bbox_inches = 'tight', pad_inches = 0)
 
