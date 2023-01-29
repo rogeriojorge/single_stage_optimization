@@ -24,7 +24,7 @@ except ImportError:
 
 # Recalculate input parameters from command line arguments
 def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
-    parser.add_argument("--use_half_period", dest="use_half_period", default=inputs.use_half_period, action="store_true")
+    parser.add_argument("--use_half_period", dest="use_half_period", default=False if QAorQHorQIorCNT=='CNT' else inputs.use_half_period, action="store_true")
     parser.add_argument("--finite_beta", dest="finite_beta", default=inputs.finite_beta, action="store_true")
     parser.add_argument("--diff_method", default=inputs.diff_method)
     parser.add_argument("--ncoils", type=float,               default=inputs.ncoils_QA if QAorQHorQIorCNT=='QA' else inputs.ncoils_QH           if QAorQHorQIorCNT=='QH' else inputs.ncoils_QI           if QAorQHorQIorCNT=='QI' else 4)
