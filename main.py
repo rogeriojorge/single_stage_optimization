@@ -197,22 +197,20 @@ class single_stage_obj_and_der():
             surf_full_boundary.to_vtk(os.path.join(coils_results_path,f"surf_intermediate_max_mode_{max_mode}_{info['Nfeval']}"), extra_data=pointData)
             curves_to_vtk(curves, os.path.join(coils_results_path,f"curves_intermediate_max_mode_{max_mode}_{info['Nfeval']}"))
         return J, grad
+# Stage 2 objective function
+JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY = form_stage_2_objective_function(surf, bs, base_curves, curves, inputs)
 # Loop over the number of predefined maximum poloidal/toroidal modes
 if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
     oustr_dict_outer=[]
     ran_stage1 = False # Only running stage1 optimization once
     previous_max_mode=0
     for max_mode in inputs.max_modes:
+        pprint(f' Optimization with max_mode={max_mode}')
         if max_mode != previous_max_mode: oustr_dict_inner=[]
-        pprint(f' Starting optimization with max_mode={max_mode}')
-        pprint(f'  Forming stage 1 objective function')
         vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
-        pprint(f'  Forming stage 2 objective function')
-        JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist, Jf, \
-            J_LENGTH, J_CC, J_CS, J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY = form_stage_2_objective_function(surf, bs, base_curves, curves, inputs)
         dofs = np.concatenate((JF.x, vmec.x))
         # Stage 1 Optimization
-        if inputs.stage_1:
+        if inputs.stage_1 and not ran_stage1:
             os.chdir(vmec_results_path)
             pprint(f'  Performing Stage 1 optimization with {inputs.MAXITER_stage_1} iterations')
             least_squares_mpi_solve(prob, mpi, grad=True, rel_step=inputs.finite_difference_rel_step, abs_step=inputs.finite_difference_abs_step, max_nfev=inputs.MAXITER_stage_1, ftol=inputs.ftol)
@@ -229,7 +227,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(e)
             ran_stage1 = True
         # Stage 2 Optimization
-        if (inputs.stage_2 and inputs.stage_1) or previous_max_mode==0:
+        if not previous_max_mode==max_mode and ((inputs.stage_2 and inputs.stage_1) or previous_max_mode==0):
             pprint(f'  Performing Stage 2 optimization with {inputs.MAXITER_stage_2+inputs.MAXITER_stage_2_simple} iterations')
             surf = vmec.boundary
             bs.set_points(surf.gamma().reshape((-1, 3)))

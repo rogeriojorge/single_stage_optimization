@@ -4,10 +4,10 @@ vmec_plot_result = True # Plot the optimized VMEC result
 booz_xform_plot_result = True # Plot the resulting field in Boozer coordinates
 # CNT -> QA stellarator with four coils
 vmec_input_start_CNT = 'input.CNT' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_CNT = 3.8 # Threshold for the length of each coil
+LENGTHBOUND_CNT = 3.9 # Threshold for the length of each coil
 CC_THRESHOLD_CNT = 0.15 # Threshold for the coil-to-coil distance penalty in the objective function
-CURVATURE_THRESHOLD_CNT = 14.0 # Threshold for the curvature penalty in the objective function
-MSC_THRESHOLD_CNT = 14.0 # Threshold for the mean squared curvature penalty in the objective function
+CURVATURE_THRESHOLD_CNT = 15.0 # Threshold for the curvature penalty in the objective function
+MSC_THRESHOLD_CNT = 15.0 # Threshold for the mean squared curvature penalty in the objective function
 include_iota_target_CNT = True # Specify if iota should be added to the objective function
 iota_target_CNT = -0.23 # Target rotational transform iota
 aspect_ratio_target_CNT = 3.5  # Target aspect ratio
@@ -17,7 +17,7 @@ LENGTHBOUND_CNT_BIG = 7.0 # Length of each of the two bigger CNT optimization co
 CURVATURE_THRESHOLD_CNT_BIG = 3.5 # Threshold for the curvature penalty in the objective function for each of the two bigger CNT optimization coils
 MSC_THRESHOLD_CNT_BIG = 4.5 # Threshold for the mean squared curvature penalty in the objective function for each of the two bigger CNT optimization coils
 FREE_TOP_BOTTOM_CNT = False # Do not keep the two bigger CNT optimization coils circular and optimize them together the two interlinking coils
-order_CNT = 7 # Number of Fourier modes describing each Cartesian component of each coil in CNT
+order_CNT = 6 # Number of Fourier modes describing each Cartesian component of each coil in CNT
 # QA
 vmec_input_start_QA = 'input.nfp2_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QA = 4 # Threshold for the length of each coil
