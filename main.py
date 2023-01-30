@@ -241,6 +241,13 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
                         myfile.write(f"\nSquared flux at max_mode {max_mode}: {Jf.J()}")
                     except Exception as e:
                         myfile.write(e)
+            try:
+                pprint(f"\nAspect ratio at max_mode {max_mode} after stage 2: {vmec.aspect()}")
+                pprint(f"\nMean iota at {max_mode} after stage 2: {vmec.mean_iota()}")
+                if not QAorQHorQIorCNT=='QI': pprint(f"\nQuasisymmetry objective at max_mode {max_mode} after stage 2: {qs.total()}")
+                pprint(f"\nSquared flux at max_mode {max_mode} after stage 2: {Jf.J()}")
+            except Exception as e:
+                pprint(e)
             mpi.comm_world.Bcast(dofs, root=0)
         # Single stage Optimization
         if inputs.single_stage:
