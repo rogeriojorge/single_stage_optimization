@@ -1,0 +1,82 @@
+ THIS IS PARVMEC (PARALLEL VMEC), VERSION 9.0
+ Lambda: Full Radial Mesh. L-Force: hybrid full/half.
+
+ COMPUTER:    OS:    RELEASE:   DATE = Jan 29,2023  TIME = 08:59:39
+ SHOT ID.: final  SEQ. NO.:   0
+ TIME SLICE =    0. ms
+
+ COMPUTATION PARAMETERS: (u = theta, v = zeta)
+ ---------------------------------------------
+     ns     nu     nv     mu     mv
+     16     14     12      4      4
+
+ CONFIGURATION PARAMETERS:
+ ---------------------------------------
+    nfp      gamma      spres_ped    phiedge(wb)     curtor(A)        lRFP
+      3  0.000E+00      1.000E+00      8.386E-02     0.000E+00           F
+
+ RUN CONTROL PARAMETERS:
+ -----------------------
+  ncurr  niter   nsin  nstep  nvacskip      ftol     tcon0    lasym  lforbal lmove_axis lconm1
+      1   1500     16    200         1  1.00E-12  1.00E+00        F        F        T        T
+  mfilter_fbdy nfilter_fbdy lfull3d1out max_main_iterations lgiveup fgiveup
+           -1           -1           F                   1       F  3.0E+01
+
+ PRECONDITIONER CONTROL PARAMETERS:
+ ----------------------------------
+  precon_type   prec2d_threshold
+  NONE                  1.00E-30
+
+ MASS PROFILE COEFFICIENTS - newton/m**2 (EXPANSION IN NORMALIZED RADIUS):
+ PMASS parameterization type is 'power_series'
+ -----------------------------------
+
+
+ TOROIDAL CURRENT DENSITY (*V') COEFFICIENTS ac (EXPANSION IN NORMALIZED RADIUS):
+ PCURR parameterization type is 'power_series'
+ --------------------------------------
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00   0.000E+00
+   0.000E+00   0.000E+00   0.000E+00
+
+
+ NORMALIZED TOROIDAL FLUX COEFFICIENTS aphi (EXPANSION IN S):
+ -----------------------------------
+   1.000E+00
+
+ R-Z FOURIER BOUNDARY COEFFICIENTS AND MAGNETIC AXIS INITIAL GUESS
+ R = RBC*COS(m*u - n*v) + RBS*SIN(m*u - n*v), Z = ZBC*COS(m*u - n*v) + ZBS*SIN(m*u-n*v)
+ --------------------------------------------------------------------------------------
+   nb  mb     rbc         rbs         zbc         zbs       raxis(c)    raxis(s)    zaxis(c)    zaxis(s)
+    0   0  1.0000E+00  0.0000E+00  0.0000E+00 -0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    1   0  4.9978E-02  0.0000E+00  0.0000E+00 -5.5347E-02  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    2   0  1.2656E-02  0.0000E+00  0.0000E+00 -4.0557E-03  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+    3   0 -9.2433E-04  0.0000E+00  0.0000E+00  2.3008E-03  0.0000E+00  0.0000E+00  0.0000E+00  0.0000E+00
+   -3   1 -2.5270E-03  0.0000E+00  0.0000E+00  2.6586E-04
+   -2   1  5.9390E-03  0.0000E+00  0.0000E+00  1.2327E-04
+   -1   1  1.7207E-02  0.0000E+00  0.0000E+00  1.8335E-02
+    0   1  1.7839E-01  0.0000E+00  0.0000E+00  1.8198E-01
+    1   1 -8.5186E-02  0.0000E+00  0.0000E+00  5.2015E-02
+    2   1 -5.7869E-04  0.0000E+00  0.0000E+00  2.8951E-03
+    3   1  2.1449E-03  0.0000E+00  0.0000E+00 -3.3041E-04
+   -3   2 -1.5873E-03  0.0000E+00  0.0000E+00 -1.3749E-03
+   -2   2 -3.5312E-03  0.0000E+00  0.0000E+00 -3.6358E-03
+   -1   2  6.3225E-03  0.0000E+00  0.0000E+00  3.6620E-03
+    0   2  2.5303E-02  0.0000E+00  0.0000E+00  1.8046E-02
+    1   2  1.2235E-02  0.0000E+00  0.0000E+00 -1.1181E-02
+    2   2 -1.2982E-03  0.0000E+00  0.0000E+00 -9.3030E-03
+    3   2  2.1772E-03  0.0000E+00  0.0000E+00 -2.4730E-04
+   -3   3 -3.3202E-04  0.0000E+00  0.0000E+00 -4.7041E-04
+   -2   3 -1.3530E-03  0.0000E+00  0.0000E+00 -1.5931E-03
+   -1   3 -3.3427E-04  0.0000E+00  0.0000E+00  2.2703E-04
+    0   3  1.9085E-03  0.0000E+00  0.0000E+00  5.2381E-04
+    1   3 -3.1043E-03  0.0000E+00  0.0000E+00 -3.7885E-04
+    2   3 -3.7496E-03  0.0000E+00  0.0000E+00 -4.4162E-04
+    3   3 -1.4302E-06  0.0000E+00  0.0000E+00  3.9710E-04
+ FSQR, FSQZ = Normalized Physical Force Residuals
+ fsqr, fsqz = Preconditioned Force Residuals
+ -----------------------
+ BEGIN FORCE ITERATIONS
+ -----------------------
+
