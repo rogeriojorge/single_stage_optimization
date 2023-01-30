@@ -115,7 +115,7 @@ class single_stage_obj_and_der():
         J_stage_1 = prob.objective()
         J_stage_2 = inputs.coils_objective_weight * JF.J()
         J = J_stage_1 + J_stage_2
-        if J > inputs.JACOBIAN_THRESHOLD:
+        if J > inputs.JACOBIAN_THRESHOLD or np.isnan(J):
             logger.info(f"Exception caught during function evaluation with J={J}. Returning J={inputs.JACOBIAN_THRESHOLD}")
             J = inputs.JACOBIAN_THRESHOLD
         jf = Jf.J()
