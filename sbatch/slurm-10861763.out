@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/marconi_scratch/userexternal/rjorge00/single_stage_optimization/./main.py", line 91, in <module>
+    vmec_input_filename = vmec_input_files[-1]
+IndexError: list index out of range
+--------------------------------------------------------------------------
+An ORTE daemon has unexpectedly failed after launch and before
+communicating back to mpirun. This could be caused by a number
+of factors, including an inability to create a connection back
+to mpirun due to a lack of common network interfaces and/or no
+route found between them. Please check network connectivity
+(including firewalls and network routing requirements).
+--------------------------------------------------------------------------
+slurmstepd: error: *** JOB 10861763 ON r181c14s02 CANCELLED AT 2023-01-30T06:59:33 DUE TO TIME LIMIT ***

@@ -1,0 +1,61 @@
+[r140c01s01:05674] *** Process received signal ***
+[r140c01s01:05674] Signal: Segmentation fault (11)
+[r140c01s01:05674] Signal code: Invalid permissions (2)
+[r140c01s01:05674] Failing at address: 0x2ac0cb43b000
+[r140c01s01:05674] [ 0] /lib64/libpthread.so.0(+0xf370)[0x2ac02e914370]
+[r140c01s01:05674] [ 1] /marconi/home/userexternal/rjorge00/.local/lib/python3.9/site-packages/booz_xform-0.0.7-py3.9-linux-x86_64.egg/booz_xform/_booz_xform.cpython-39-x86_64-linux-gnu.so(+0x26b0a)[0x2ac07303db0a]
+[r140c01s01:05674] [ 2] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyObject_MakeTpCall+0x80)[0x2ac02dfc11d0]
+[r140c01s01:05674] [ 3] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x69c9)[0x2ac02df73999]
+[r140c01s01:05674] [ 4] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x66069)[0x2ac02df6c069]
+[r140c01s01:05674] [ 5] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x12290a)[0x2ac02e02890a]
+[r140c01s01:05674] [ 6] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x122a6f)[0x2ac02e028a6f]
+[r140c01s01:05674] [ 7] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyNumber_Add+0x93)[0x2ac02dfa5e23]
+[r140c01s01:05674] [ 8] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x1df0)[0x2ac02df6edc0]
+[r140c01s01:05674] [ 9] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1a674c)[0x2ac02e0ac74c]
+[r140c01s01:05674] [10] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyFunction_Vectorcall+0x9d)[0x2ac02dfc0f3d]
+[r140c01s01:05674] [11] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalFrameDefault+0x697f)[0x2ac02df7394f]
+[r140c01s01:05674] [12] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1a674c)[0x2ac02e0ac74c]
+[r140c01s01:05674] [13] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(_PyEval_EvalCodeWithName+0x4e)[0x2ac02e0acc6e]
+[r140c01s01:05674] [14] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyEval_EvalCodeEx+0x3e)[0x2ac02e0accbe]
+[r140c01s01:05674] [15] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyEval_EvalCode+0x1b)[0x2ac02e0acceb]
+[r140c01s01:05674] [16] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(+0x1e7065)[0x2ac02e0ed065]
+[r140c01s01:05674] [17] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(PyRun_SimpleFileExFlags+0x188)[0x2ac02e0eea88]
+[r140c01s01:05674] [18] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(Py_RunMain+0x757)[0x2ac02e10b587]
+[r140c01s01:05674] [19] /marconi_work/PROJECTS/spack/preprod/02/install/0.18/linux-centos7-skylake/gcc-10.2.0/python-3.9.12-4t7kj5ew6umjslpe5kofug3eo32dvgng/lib/libpython3.9.so.1.0(Py_BytesMain+0x43)[0x2ac02e10ba23]
+[r140c01s01:05674] [20] /lib64/libc.so.6(__libc_start_main+0xf5)[0x2ac02f24bb35]
+[r140c01s01:05674] [21] python3[0x40110e]
+[r140c01s01:05674] *** End of error message ***
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun noticed that process rank 13 with PID 5674 on node r140c01s01 exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+/marconi/home/userexternal/rjorge00/simsopt/src/simsopt/mhd/vmec_diagnostics.py:237: RuntimeWarning: invalid value encountered in sqrt
+  residuals3d[js, :, :] = np.sqrt(self.weights[js] * nfp * dtheta * dphi / V_prime[js] * sqrtg[js, :, :]) \
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+/marconi/home/userexternal/rjorge00/simsopt/src/simsopt/mhd/vmec_diagnostics.py:237: RuntimeWarning: invalid value encountered in sqrt
+  residuals3d[js, :, :] = np.sqrt(self.weights[js] * nfp * dtheta * dphi / V_prime[js] * sqrtg[js, :, :]) \
+/marconi/home/userexternal/rjorge00/simsopt/src/simsopt/mhd/vmec_diagnostics.py:237: RuntimeWarning: invalid value encountered in sqrt
+  residuals3d[js, :, :] = np.sqrt(self.weights[js] * nfp * dtheta * dphi / V_prime[js] * sqrtg[js, :, :]) \
+/marconi/home/userexternal/rjorge00/simsopt/src/simsopt/mhd/vmec_diagnostics.py:237: RuntimeWarning: invalid value encountered in sqrt
+  residuals3d[js, :, :] = np.sqrt(self.weights[js] * nfp * dtheta * dphi / V_prime[js] * sqrtg[js, :, :]) \
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
+WARNING:simsopt.objectives.least_squares:Function evaluation failed for <bound method Vmec.aspect of Vmec1 (nfp=2 mpol=4 ntor=4)>
