@@ -32,9 +32,9 @@ aspect_ratio_target_QA = 6  # Target aspect ratio
 # QH
 vmec_input_start_QH = 'input.nfp4_QH_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QH = 4 # Threshold for the length of each coil
-CC_THRESHOLD_QH = 0.07 # Threshold for the coil-to-coil distance penalty in the objective function
-CURVATURE_THRESHOLD_QH = 14 # Threshold for the curvature penalty in the objective function
-MSC_THRESHOLD_QH = 14 # Threshold for the mean squared curvature penalty in the objective function
+CC_THRESHOLD_QH = 0.08 # Threshold for the coil-to-coil distance penalty in the objective function
+CURVATURE_THRESHOLD_QH = 10 # Threshold for the curvature penalty in the objective function
+MSC_THRESHOLD_QH = 10 # Threshold for the mean squared curvature penalty in the objective function
 ncoils_QH = 5 # Number of coils per half field period
 quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
