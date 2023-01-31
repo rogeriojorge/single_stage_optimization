@@ -148,10 +148,11 @@ def main(file,name='',figures_folder='.', coils_curves=None, s_plot_ignore=0.2,s
     plotNum += 1
     #plt.plot(phi, iotaf, '.-',label='iotaf')
     #plt.plot(phi_half, iotas[1:],'.-',label='iotas')
-    plt.plot(s, iotaf, '.-',label='iotaf')
-    plt.plot(s_half, iotas[1:],'.-',label='iotas')
-    plt.legend(fontsize='x-small')
+    plt.plot(s, iotaf, '.-',label='iota')
+    # plt.plot(s_half, iotas[1:],'.-',label='iotas')
+    # plt.legend(fontsize='x-small')
     plt.xlabel(xLabel)
+    plt.ylabel(f'$\iota$')
 
     plt.subplot(numRows,numCols,plotNum)
     plotNum += 1

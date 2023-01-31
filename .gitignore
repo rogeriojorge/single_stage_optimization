@@ -13,6 +13,7 @@ objective*
 *before_inner_loop*
 *after_inner_loop*
 output*
+*DS_Store*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

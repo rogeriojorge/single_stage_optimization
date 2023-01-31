@@ -67,7 +67,7 @@ maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the Q
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
 single_stage = False # Perform a single stage optimization
-order = 16 # Number of Fourier modes describing each Cartesian component of each coil
+order = 12 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
 max_modes = [2] # Fourier mode resolution for the plasma surface
