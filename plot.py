@@ -33,16 +33,18 @@ logger.setLevel(1)
 def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
 ################## INPUT PARAMETERS ########################
 parser = argparse.ArgumentParser()
-# parser.add_argument("--results_folder",default='CNT_Stage123_Lengthbound3.8_ncoils4')
+# parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4')
+# parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4_circular')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils3_nfp2')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils2_nfp3')
-parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound5.0_ncoils8_nfp1')
+# parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound5.0_ncoils8_nfp1')
 # parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound4.5_ncoils3_nfp2')
-# parser.add_argument("--results_folder",default='QH_Stage123_Lengthbound3.5_ncoils3_nfp4')
+parser.add_argument("--results_folder",default='QH_Stage123_Lengthbound3.5_ncoils3_nfp4')
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
+parser.add_argument("--plot_VMEC", dest="plot_VMEC", default=True, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=12)
 parser.add_argument("--tmax_fl", type=int, default=5000)
@@ -156,6 +158,10 @@ pointData_final = {"B·n": BdotN_surf_final[:, :, None]}
 if args.whole_torus: coilpy_plot([c.curve for c in bs_final.coils], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 else: coilpy_plot([c.curve for c in bs_final.coils[0:ncoils]], os.path.join(coils_directory,"coils_optPlot.vtu"), height=0.05, width=0.05)
 s_final.to_vtk(os.path.join(coils_directory,"surf_optPlot"), extra_data=pointData_final)
+# vmecplot2 of results
+sys.path.insert(1, os.path.join(parent_path, '../single_stage/plotting'))
+if args.plot_VMEC and os.path.isfile(os.path.join(this_path, filename_vmec_final)):
+    vmecPlot2_main(file=os.path.join(this_path, filename_vmec_final), name='VMEC_final', figures_folder=OUT_DIR)
 ##### CREATE QFM #####
 vmec_ran_QFM = False
 if args.create_QFM:

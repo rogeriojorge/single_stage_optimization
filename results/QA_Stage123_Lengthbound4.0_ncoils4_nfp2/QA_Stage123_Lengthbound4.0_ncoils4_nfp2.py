@@ -6,8 +6,8 @@ booz_xform_plot_result = True # Plot the resulting field in Boozer coordinates
 vmec_input_start_CNT = 'input.CNT' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_CNT = 3.8 # Threshold for the length of each coil
 CC_THRESHOLD_CNT = 0.15 # Threshold for the coil-to-coil distance penalty in the objective function
-CURVATURE_THRESHOLD_CNT = 14.0 # Threshold for the curvature penalty in the objective function
-MSC_THRESHOLD_CNT = 14.0 # Threshold for the mean squared curvature penalty in the objective function
+CURVATURE_THRESHOLD_CNT = 12.0 # Threshold for the curvature penalty in the objective function
+MSC_THRESHOLD_CNT = 12.0 # Threshold for the mean squared curvature penalty in the objective function
 include_iota_target_CNT = True # Specify if iota should be added to the objective function
 iota_target_CNT = -0.23 # Target rotational transform iota
 aspect_ratio_target_CNT = 3.5  # Target aspect ratio
@@ -17,7 +17,7 @@ LENGTHBOUND_CNT_BIG = 7.0 # Length of each of the two bigger CNT optimization co
 CURVATURE_THRESHOLD_CNT_BIG = 3.5 # Threshold for the curvature penalty in the objective function for each of the two bigger CNT optimization coils
 MSC_THRESHOLD_CNT_BIG = 4.5 # Threshold for the mean squared curvature penalty in the objective function for each of the two bigger CNT optimization coils
 FREE_TOP_BOTTOM_CNT = False # Do not keep the two bigger CNT optimization coils circular and optimize them together the two interlinking coils
-order_CNT = 7 # Number of Fourier modes describing each Cartesian component of each coil in CNT
+order_CNT = 6 # Number of Fourier modes describing each Cartesian component of each coil in CNT
 # QA
 vmec_input_start_QA = 'input.nfp2_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QA = 4 # Threshold for the length of each coil
@@ -32,9 +32,9 @@ aspect_ratio_target_QA = 6  # Target aspect ratio
 # QH
 vmec_input_start_QH = 'input.nfp4_QH_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
 LENGTHBOUND_QH = 4 # Threshold for the length of each coil
-CC_THRESHOLD_QH = 0.07 # Threshold for the coil-to-coil distance penalty in the objective function
-CURVATURE_THRESHOLD_QH = 14 # Threshold for the curvature penalty in the objective function
-MSC_THRESHOLD_QH = 14 # Threshold for the mean squared curvature penalty in the objective function
+CC_THRESHOLD_QH = 0.08 # Threshold for the coil-to-coil distance penalty in the objective function
+CURVATURE_THRESHOLD_QH = 10 # Threshold for the curvature penalty in the objective function
+MSC_THRESHOLD_QH = 10 # Threshold for the mean squared curvature penalty in the objective function
 ncoils_QH = 5 # Number of coils per half field period
 quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
@@ -67,7 +67,7 @@ maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the Q
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
 single_stage = False # Perform a single stage optimization
-order = 16 # Number of Fourier modes describing each Cartesian component of each coil
+order = 12 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
 max_modes = [2] # Fourier mode resolution for the plasma surface
