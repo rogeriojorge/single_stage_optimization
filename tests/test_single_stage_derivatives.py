@@ -263,7 +263,7 @@ for QA_or_QH in QA_or_QHs:
             plt.loglog(abs_step_array, sqrt_squared_diff_grad_with_respect_to_coils_array, 'o-', label=r'$\Delta J(x_{\mathrm{coils}})$'+f' ({derivative_algorithm})', linewidth=2.0)
             plt.loglog(abs_step_array, sqrt_squared_diff_grad_with_respect_to_surface_array, 'o-', label=r'$\Delta J(x_{\mathrm{surface}})$'+f' ({derivative_algorithm})', linewidth=2.0)
                 
-    plt.gca().invert_xaxis()
+    # plt.gca().invert_xaxis()
     plt.xlabel('step size $\Delta x_i$', fontsize=22)
     plt.ylabel('RMS($\Delta J$)', fontsize=22)
     ax.tick_params(axis='x', labelsize=16)

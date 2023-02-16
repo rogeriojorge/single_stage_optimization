@@ -226,7 +226,7 @@ for QA_or_QH in QA_or_QHs:
         if only_grad_stage2: plt.loglog(eps_array, err_array, 'o-', label=QA_or_QH, linewidth=2.0)
         else:                plt.loglog(eps_array, err_array, 'o-', label=QA_or_QH, linewidth=2.0)
                 
-plt.gca().invert_xaxis()
+# plt.gca().invert_xaxis()
 plt.xlabel('step size $\Delta x$', fontsize=22)
 if only_grad_stage2:
     plt.ylabel("$|\Delta J_2/\Delta x - J_2'(x)|$", fontsize=22)
