@@ -12,10 +12,13 @@ from math import ceil, sqrt
 import matplotlib.pyplot as plt
 from src.vmecPlot2 import main as vmecPlot2_main
 from simsopt import load
+from simsopt.mhd import QuasisymmetryRatioResidual
 from simsopt.mhd import Vmec, Boozer, VirtualCasing
 from simsopt.geo import QfmSurface, SurfaceRZFourier
 from simsopt.geo import QfmResidual, Volume, curves_to_vtk
 from simsopt.field import particles_to_vtk, compute_fieldlines
+from src.qi_functions import QuasiIsodynamicResidual
+from src.inputs import snorms, nphi_QI, nalpha_QI, nBj_QI, mpol_QI, ntor_QI, nphi_out_QI, arr_out_QI
 import matplotlib
 import warnings
 import matplotlib.cbook
@@ -33,11 +36,11 @@ logger.setLevel(1)
 def pprint(*args, **kwargs): print(*args, **kwargs) if comm.rank == 0 else 1
 ################## INPUT PARAMETERS ########################
 parser = argparse.ArgumentParser()
-parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4')
+# parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4')
 # parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4_circular')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils3_nfp2')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils2_nfp3')
-# parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound5.0_ncoils8_nfp1')
+parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound5.0_ncoils8_nfp1')
 # parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound4.5_ncoils3_nfp2')
 # parser.add_argument("--results_folder",default='QH_Stage123_Lengthbound3.5_ncoils3_nfp4')
 parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
@@ -46,13 +49,14 @@ parser.add_argument("--create_QFM_stage12", dest="create_QFM_stage12", default=F
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
 parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
 parser.add_argument("--plot_VMEC", dest="plot_VMEC", default=False, action="store_true")
+parser.add_argument("--plot_VMEC_QFM", dest="plot_VMEC_QFM", default=False, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=12)
 parser.add_argument("--tmax_fl", type=int, default=5000)
-parser.add_argument("--nphi_QFM", type=int, default=25)
-parser.add_argument("--ntheta_QFM", type=int, default=35)
-parser.add_argument("--mpol", type=int, default=14)
-parser.add_argument("--ntor", type=int, default=14)
+parser.add_argument("--nphi_QFM", type=int, default=30)
+parser.add_argument("--ntheta_QFM", type=int, default=40)
+parser.add_argument("--mpol", type=int, default=12)
+parser.add_argument("--ntor", type=int, default=12)
 parser.add_argument("--nphi", type=int, default=256)
 parser.add_argument("--ntheta", type=int, default=128)
 parser.add_argument("--tol_qfm", type=float, default=1e-14)
@@ -70,6 +74,12 @@ filename_vmec_final = 'wout_final.nc'
 filename_bs_final = 'biot_savart_opt.json'
 results_parent_folder = 'results'
 coils_directory = 'coils'
+quasisymmetry_target_surfaces = [0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ]
+YY = args.results_folder.split("_")[0]
+if YY == "QH" or YY == "QI":
+    quasisymmetry_helicity_n = -1
+elif YY == "QA" or YY == "CNT" or YY == "Paper":
+    quasisymmetry_helicity_n = 0
 ################## FUNCTIONS ###########################
 def coilpy_plot(curves, filename, height=0.1, width=0.1):
     def wrap(data):
@@ -166,75 +176,93 @@ if args.plot_VMEC and os.path.isfile(os.path.join(this_path, filename_vmec_final
 ##### CREATE QFM #####
 vmec_ran_QFM = False
 if args.create_QFM:
-    pprint('Finding QFM surface')
-    s = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
-    s.change_resolution(args.mpol, args.ntor)
-    s_original_VMEC = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
-    nfp = vmec_final.wout.nfp
-    s.to_vtk(os.path.join(OUT_DIR, 'QFM_original_VMEC'))
-    pprint('Obtaining QFM surface')
-    bs_final.set_points(s.gamma().reshape((-1, 3)))
-    curves = [coil.curve for coil in bs_final.coils]
-    curves_to_vtk(curves, os.path.join(OUT_DIR, "curves_QFM_test"))
-    pointData = {"B_N": np.sum(bs_final.B().reshape((args.nphi_QFM, args.ntheta_QFM, 3)) * s.unitnormal(), axis=2)[:, :, None]}
-    s.to_vtk(os.path.join(OUT_DIR, "surf_QFM_test"), extra_data=pointData)
-    # Optimize at fixed volume
-    qfm = QfmResidual(s, bs_final)
-    pprint(f"Initial qfm.J()={qfm.J()}")
-    vol = Volume(s)
-    vol_target = Volume(s).J()*args.volume_scale
-    qfm_surface = QfmSurface(bs_final, s, vol, vol_target)
-    t1=time.time()
-    pprint(f"Initial ||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-    res = qfm_surface.minimize_qfm_penalty_constraints_LBFGS(tol=args.tol_qfm, maxiter=args.maxiter_qfm, constraint_weight=args.constraint_weight)
-    pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-    res = qfm_surface.minimize_qfm_exact_constraints_SLSQP(tol=args.tol_qfm, maxiter=args.maxiter_qfm/10)
-    pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-    pprint(f"Found QFM surface in {time.time()-t1}s.")
-    s.to_vtk(os.path.join(OUT_DIR, 'QFM_found'))
-    s_gamma = s.gamma()
-    s_R = np.sqrt(s_gamma[:, :, 0]**2 + s_gamma[:, :, 1]**2)
-    s_Z = s_gamma[:, :, 2]
-    s_gamma_original = s_original_VMEC.gamma()
-    s_R_original = np.sqrt(s_gamma_original[:, :, 0]**2 + s_gamma_original[:, :, 1]**2)
-    s_Z_original = s_gamma_original[:, :, 2]
-
-    # Plot QFM surface
-    fig = plt.figure()
-    ax = fig.add_subplot(111,aspect='equal')
-    plt.plot(s_R[0,:],s_Z[0,:], label = 'QFM')
-    plt.plot(s_R_original[0,:],s_Z_original[0,:], label = 'VMEC')
-    plt.xlabel('R')
-    plt.ylabel('Z')
-    ax.axis('equal')
-    plt.legend()
-    plt.savefig(os.path.join(OUT_DIR, 'QFM_surface.pdf'), bbox_inches = 'tight', pad_inches = 0)
-
-    # Create QFM VMEC equilibrium
-    os.chdir(OUT_DIR)
-    vmec_QFM = Vmec(os.path.join(this_path,args.filename_final), verbose=args.vmec_verbose)
-    vmec_QFM.indata.mpol = args.mpol
-    vmec_QFM.indata.ntor = args.ntor
-    vmec_QFM.boundary = s
-    vmec_QFM.indata.ns_array[:3]    = [  16,    51,    101]
-    vmec_QFM.indata.niter_array[:3] = [ 2000,  3000, 20000]
-    vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
-    vmec_QFM.indata.am[0:10] = [0]*10
-    vmec_QFM.write_input(os.path.join(this_path,f'input.qfm'))
-    vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'), verbose=True)#args.vmec_verbose)
-    try:
-        vmec_QFM.run()
+    if os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
+        vmec_QFM = Vmec(os.path.join(this_path, f"wout_QFM.nc"))
         vmec_ran_QFM = True
-    except Exception as e:
-        pprint('VMEC QFM did not converge')
-        pprint(e)
-    try:
-        shutil.move(os.path.join(OUT_DIR, f"wout_qfm_000_000000.nc"), os.path.join(this_path, f"wout_qfm.nc"))
-        os.remove(os.path.join(OUT_DIR, f'input.qfm_000_000000'))
-    except Exception as e:
-        print(e)
+    else:
+        if not os.path.isfile(os.path.join(this_path, f"input.qfm")):
+            pprint('Finding QFM surface')
+            s = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
+            s.change_resolution(args.mpol, args.ntor)
+            s_original_VMEC = SurfaceRZFourier.from_wout(filename_vmec_final, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
+            nfp = vmec_final.wout.nfp
+            s.to_vtk(os.path.join(OUT_DIR, 'QFM_original_VMEC'))
+            pprint('Obtaining QFM surface')
+            bs_final.set_points(s.gamma().reshape((-1, 3)))
+            curves = [coil.curve for coil in bs_final.coils]
+            curves_to_vtk(curves, os.path.join(OUT_DIR, "curves_QFM_test"))
+            pointData = {"B_N": np.sum(bs_final.B().reshape((args.nphi_QFM, args.ntheta_QFM, 3)) * s.unitnormal(), axis=2)[:, :, None]}
+            s.to_vtk(os.path.join(OUT_DIR, "surf_QFM_test"), extra_data=pointData)
+            # Optimize at fixed volume
+            qfm = QfmResidual(s, bs_final)
+            pprint(f"Initial qfm.J()={qfm.J()}")
+            vol = Volume(s)
+            vol_target = Volume(s).J()*args.volume_scale
+            qfm_surface = QfmSurface(bs_final, s, vol, vol_target)
+            t1=time.time()
+            pprint(f"Initial ||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            res = qfm_surface.minimize_qfm_penalty_constraints_LBFGS(tol=args.tol_qfm, maxiter=args.maxiter_qfm, constraint_weight=args.constraint_weight)
+            pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            res = qfm_surface.minimize_qfm_exact_constraints_SLSQP(tol=args.tol_qfm, maxiter=args.maxiter_qfm/10)
+            pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            pprint(f"Found QFM surface in {time.time()-t1}s.")
+            s.to_vtk(os.path.join(OUT_DIR, 'QFM_found'))
+            s_gamma = s.gamma()
+            s_R = np.sqrt(s_gamma[:, :, 0]**2 + s_gamma[:, :, 1]**2)
+            s_Z = s_gamma[:, :, 2]
+            s_gamma_original = s_original_VMEC.gamma()
+            s_R_original = np.sqrt(s_gamma_original[:, :, 0]**2 + s_gamma_original[:, :, 1]**2)
+            s_Z_original = s_gamma_original[:, :, 2]
 
-if vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc")):
+            # Plot QFM surface
+            fig = plt.figure()
+            ax = fig.add_subplot(111,aspect='equal')
+            plt.plot(s_R[0,:],s_Z[0,:], label = 'QFM')
+            plt.plot(s_R_original[0,:],s_Z_original[0,:], label = 'VMEC')
+            plt.xlabel('R')
+            plt.ylabel('Z')
+            ax.axis('equal')
+            plt.legend()
+            plt.savefig(os.path.join(OUT_DIR, 'QFM_surface.pdf'), bbox_inches = 'tight', pad_inches = 0)
+
+            # Create QFM VMEC equilibrium
+            os.chdir(OUT_DIR)
+            vmec_QFM = Vmec(os.path.join(this_path,args.filename_final), verbose=args.vmec_verbose)
+            vmec_QFM.indata.mpol = args.mpol
+            vmec_QFM.indata.ntor = args.ntor
+            vmec_QFM.boundary = s
+            vmec_QFM.indata.ns_array[:3]    = [  16,    51,    101]
+            vmec_QFM.indata.niter_array[:3] = [ 2000,  3000, 20000]
+            vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
+            vmec_QFM.indata.am[0:10] = [0]*10
+            vmec_QFM.write_input(os.path.join(this_path,f'input.qfm'))
+        else:
+            os.chdir(OUT_DIR)
+            vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm'), verbose=True)#args.vmec_verbose)
+            try:
+                vmec_QFM.run()
+                vmec_ran_QFM = True
+            except Exception as e:
+                pprint('VMEC QFM did not converge')
+                pprint(e)
+        try:
+            shutil.move(os.path.join(OUT_DIR, f"wout_qfm_000_000000.nc"), os.path.join(this_path, f"wout_qfm.nc"))
+            os.remove(os.path.join(OUT_DIR, f'input.qfm_000_000000'))
+        except Exception as e:
+            print(e)
+
+    if YY == "QI":
+        qi = QuasiIsodynamicResidual(vmec_QFM,snorms=snorms, nphi=nphi_QI, nalpha=nalpha_QI, nBj=nBj_QI, mpol=mpol_QI, ntor=ntor_QI, nphi_out=nphi_out_QI, arr_out=arr_out_QI)
+        pprint(f"Quasi-isodynamicity of QFM fixed boundary solution single-stage: {np.sum(qi * qi)}")
+        with open(os.path.join(OUT_DIR, "output_QFM_qi.txt"), "w") as f:
+            f.write(f"Quasi-isodynamicity of QFM fixed boundary solution: {np.sum(qi * qi)}")
+    else:
+        qs = QuasisymmetryRatioResidual(vmec_QFM, quasisymmetry_target_surfaces, helicity_m=1, helicity_n=quasisymmetry_helicity_n)
+        pprint(f"Quasisymmetry of QFM fixed boundary solution single-stage: {qs.total()}")
+        with open(os.path.join(OUT_DIR, "output_QFM_qs.txt"), "w") as f:
+            f.write(f"Quasisymmetry of QFM fixed boundary solution: {qs.total()}")
+
+if (vmec_ran_QFM or os.path.isfile(os.path.join(this_path, f"wout_QFM.nc"))) and args.plot_VMEC_QFM:
     nfp = vmec_final.wout.nfp
     nzeta=4
     zeta = np.linspace(0,2*np.pi/nfp,num=nzeta,endpoint=False)
@@ -368,82 +396,87 @@ if args.create_QFM_stage12:
         vmec_QFM = Vmec(os.path.join(this_path, f"wout_QFM_stage12.nc"))
         vmec_ran_QFM_stage12 = True
     else:
-        pprint('Finding QFM surface for stage 1+2')
-        s = SurfaceRZFourier.from_vmec_input(args.filename_stage1, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
-        s.change_resolution(args.mpol, args.ntor)
-        s_original_VMEC = SurfaceRZFourier.from_vmec_input(args.filename_stage1, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
-        nfp = vmec_final.wout.nfp
-        s.to_vtk(os.path.join(OUT_DIR, 'QFM_stage12_original_VMEC'))
-        pprint('Obtaining QFM surface for stage 1+2')
-        bs_stage1.set_points(s.gamma().reshape((-1, 3)))
-        curves = [coil.curve for coil in bs_stage1.coils]
-        curves_to_vtk(curves, os.path.join(OUT_DIR, "curves_QFM_test_stage12"))
-        pointData = {"B_N": np.sum(bs_stage1.B().reshape((args.nphi_QFM, args.ntheta_QFM, 3)) * s.unitnormal(), axis=2)[:, :, None]}
-        s.to_vtk(os.path.join(OUT_DIR, "surf_QFM_test_stage12"), extra_data=pointData)
-        # Optimize at fixed volume
-        qfm = QfmResidual(s, bs_stage1)
-        pprint(f"Initial qfm.J()={qfm.J()}")
-        vol = Volume(s)
-        vol_target = Volume(s).J()*args.volume_scale
-        qfm_surface = QfmSurface(bs_stage1, s, vol, vol_target)
-        t1=time.time()
-        pprint(f"Initial ||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-        res = qfm_surface.minimize_qfm_penalty_constraints_LBFGS(tol=args.tol_qfm, maxiter=args.maxiter_qfm, constraint_weight=args.constraint_weight)
-        pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-        res = qfm_surface.minimize_qfm_exact_constraints_SLSQP(tol=args.tol_qfm, maxiter=args.maxiter_qfm/10)
-        pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
-        pprint(f"Found QFM surface in {time.time()-t1}s.")
-        s.to_vtk(os.path.join(OUT_DIR, 'QFM_found_stage12'))
-        s_gamma = s.gamma()
-        s_R = np.sqrt(s_gamma[:, :, 0]**2 + s_gamma[:, :, 1]**2)
-        s_Z = s_gamma[:, :, 2]
-        s_gamma_original = s_original_VMEC.gamma()
-        s_R_original = np.sqrt(s_gamma_original[:, :, 0]**2 + s_gamma_original[:, :, 1]**2)
-        s_Z_original = s_gamma_original[:, :, 2]
+        if not os.path.isfile(os.path.join(this_path, f"input.qfm_stage12")):
+            pprint('Finding QFM surface for stage 1+2')
+            s = SurfaceRZFourier.from_vmec_input(args.filename_stage1, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
+            s.change_resolution(args.mpol, args.ntor)
+            s_original_VMEC = SurfaceRZFourier.from_vmec_input(args.filename_stage1, nphi=args.nphi_QFM, ntheta=args.ntheta_QFM, range="half period")
+            nfp = vmec_final.wout.nfp
+            s.to_vtk(os.path.join(OUT_DIR, 'QFM_stage12_original_VMEC'))
+            pprint('Obtaining QFM surface for stage 1+2')
+            bs_stage1.set_points(s.gamma().reshape((-1, 3)))
+            curves = [coil.curve for coil in bs_stage1.coils]
+            curves_to_vtk(curves, os.path.join(OUT_DIR, "curves_QFM_test_stage12"))
+            pointData = {"B_N": np.sum(bs_stage1.B().reshape((args.nphi_QFM, args.ntheta_QFM, 3)) * s.unitnormal(), axis=2)[:, :, None]}
+            s.to_vtk(os.path.join(OUT_DIR, "surf_QFM_test_stage12"), extra_data=pointData)
+            # Optimize at fixed volume
+            qfm = QfmResidual(s, bs_stage1)
+            pprint(f"Initial qfm.J()={qfm.J()}")
+            vol = Volume(s)
+            vol_target = Volume(s).J()*args.volume_scale
+            qfm_surface = QfmSurface(bs_stage1, s, vol, vol_target)
+            t1=time.time()
+            pprint(f"Initial ||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            res = qfm_surface.minimize_qfm_penalty_constraints_LBFGS(tol=args.tol_qfm, maxiter=args.maxiter_qfm, constraint_weight=args.constraint_weight)
+            pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            res = qfm_surface.minimize_qfm_exact_constraints_SLSQP(tol=args.tol_qfm, maxiter=args.maxiter_qfm/10)
+            pprint(f"||vol constraint||={0.5*(s.volume()-vol_target)**2:.8e}, ||residual||={np.linalg.norm(qfm.J()):.8e}")
+            pprint(f"Found QFM surface in {time.time()-t1}s.")
+            s.to_vtk(os.path.join(OUT_DIR, 'QFM_found_stage12'))
+            s_gamma = s.gamma()
+            s_R = np.sqrt(s_gamma[:, :, 0]**2 + s_gamma[:, :, 1]**2)
+            s_Z = s_gamma[:, :, 2]
+            s_gamma_original = s_original_VMEC.gamma()
+            s_R_original = np.sqrt(s_gamma_original[:, :, 0]**2 + s_gamma_original[:, :, 1]**2)
+            s_Z_original = s_gamma_original[:, :, 2]
 
-        # Plot QFM surface
-        fig = plt.figure()
-        ax = fig.add_subplot(111,aspect='equal')
-        plt.plot(s_R[0,:],s_Z[0,:], label = 'QFM')
-        plt.plot(s_R_original[0,:],s_Z_original[0,:], label = 'VMEC')
-        plt.xlabel('R')
-        plt.ylabel('Z')
-        ax.axis('equal')
-        plt.legend()
-        plt.savefig(os.path.join(OUT_DIR, 'QFM_surface_stage12.pdf'), bbox_inches = 'tight', pad_inches = 0)
+            # Plot QFM surface
+            fig = plt.figure()
+            ax = fig.add_subplot(111,aspect='equal')
+            plt.plot(s_R[0,:],s_Z[0,:], label = 'QFM')
+            plt.plot(s_R_original[0,:],s_Z_original[0,:], label = 'VMEC')
+            plt.xlabel('R')
+            plt.ylabel('Z')
+            ax.axis('equal')
+            plt.legend()
+            plt.savefig(os.path.join(OUT_DIR, 'QFM_surface_stage12.pdf'), bbox_inches = 'tight', pad_inches = 0)
 
-        # Create QFM VMEC equilibrium
-        os.chdir(OUT_DIR)
-        vmec_QFM = Vmec(os.path.join(this_path,args.filename_final), verbose=args.vmec_verbose)
-        vmec_QFM.indata.mpol = args.mpol
-        vmec_QFM.indata.ntor = args.ntor
-        vmec_QFM.boundary = s
-        vmec_QFM.indata.ns_array[:3]    = [  16,    51,    101]
-        vmec_QFM.indata.niter_array[:3] = [ 2000,  3000, 20000]
-        vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
-        vmec_QFM.indata.am[0:10] = [0]*10
-        vmec_QFM.write_input(os.path.join(this_path,f'input.qfm_stage12'))
-        vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm_stage12'), verbose=True)#args.vmec_verbose)
-        try:
-            vmec_QFM.run()
-            vmec_ran_QFM = True
-        except Exception as e:
-            pprint('VMEC QFM did not converge')
-            pprint(e)
+            # Create QFM VMEC equilibrium
+            os.chdir(OUT_DIR)
+            vmec_QFM = Vmec(os.path.join(this_path,args.filename_final), verbose=True)
+            vmec_QFM.indata.mpol = args.mpol
+            vmec_QFM.indata.ntor = args.ntor
+            vmec_QFM.boundary = s
+            vmec_QFM.indata.ns_array[:3]    = [  16,    51,    101]
+            vmec_QFM.indata.niter_array[:3] = [ 2000,  3000, 20000]
+            vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
+            vmec_QFM.indata.am[0:10] = [0]*10
+            vmec_QFM.write_input(os.path.join(this_path,f'input.qfm_stage12'))
+        else:
+            os.chdir(OUT_DIR)
+            vmec_QFM = Vmec(os.path.join(this_path,f'input.qfm_stage12'), verbose=True)#args.vmec_verbose)
+            vmec_QFM.indata.ns_array[:3]    = [  16,    51,    101]
+            vmec_QFM.indata.niter_array[:3] = [20000, 30000, 50000]
+            vmec_QFM.indata.ftol_array[:3]  = [1e-14, 1e-14, 1e-14]
+            try:
+                vmec_QFM.run()
+                vmec_ran_QFM = True
+            except Exception as e:
+                pprint('VMEC QFM did not converge')
+                pprint(e)
         try:
             shutil.move(os.path.join(OUT_DIR, f"wout_qfm_stage12_000_000000.nc"), os.path.join(this_path, f"wout_qfm_stage12.nc"))
             os.remove(os.path.join(OUT_DIR, f'input.qfm_stage12_000_000000'))
         except Exception as e:
             pprint(e)
 
-    from simsopt.mhd import QuasisymmetryRatioResidual
-    quasisymmetry_target_surfaces = [0. , 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1. ]
-    YY = args.results_folder.split("_")[0]
-    if YY == "QH" or YY == "QI":
-        quasisymmetry_helicity_n = -1
-    elif YY == "QA" or YY == "CNT" or YY == "Paper":
-        quasisymmetry_helicity_n = 0
-    qs = QuasisymmetryRatioResidual(vmec_QFM, quasisymmetry_target_surfaces, helicity_m=1, helicity_n=quasisymmetry_helicity_n)
-    pprint(f"Quasisymmetry of QFM fixed boundary solution: {qs.total()}")
-    with open(os.path.join(OUT_DIR, "output_QFM_qs.txt", "w")) as f:
-        f.write(f"Quasisymmetry of QFM fixed boundary solution: {qs.total()}")
+    if YY == "QI":
+        qi = QuasiIsodynamicResidual(vmec_QFM,snorms=snorms, nphi=nphi_QI, nalpha=nalpha_QI, nBj=nBj_QI, mpol=mpol_QI, ntor=ntor_QI, nphi_out=nphi_out_QI, arr_out=arr_out_QI)
+        pprint(f"Quasi-isodynamicity of QFM fixed boundary solution stage 1+2: {np.sum(qi * qi)}")
+        with open(os.path.join(OUT_DIR, "output_QFM_qi_stage12.txt"), "w") as f:
+            f.write(f"Quasi-isodynamicity of QFM fixed boundary solution stage 1+2: {np.sum(qi * qi)}")
+    else:
+        qs = QuasisymmetryRatioResidual(vmec_QFM, quasisymmetry_target_surfaces, helicity_m=1, helicity_n=quasisymmetry_helicity_n)
+        pprint(f"Quasisymmetry of QFM fixed boundary solution stage 1+2: {qs.total()}")
+        with open(os.path.join(OUT_DIR, "output_QFM_qs_stage12.txt"), "w") as f:
+            f.write(f"Quasisymmetry of QFM fixed boundary solution stage 1+2: {qs.total()}")
