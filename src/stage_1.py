@@ -22,8 +22,8 @@ def form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_bo
     optMirror = make_optimizable(partial_MirrorRatioPen, vmec)
     if inputs.QAorQHorQIorCNT == 'QI':
         objective_tuple.append((qi.J, 0, inputs.qsqi_weight))
-        objective_tuple.append((optElongation.J, 0, inputs.elongation_weight))
-        objective_tuple.append((optMirror.J, 0, inputs.mirror_weight))
+        objective_tuple.append((optElongation.J, 0, inputs.elongation_weight)) #Não ser tão achatado (rácio entre o semi eixo maior e menor da elipse)
+        objective_tuple.append((optMirror.J, 0, inputs.mirror_weight)) #Diferença entre o max e o min do modulo do B numa superficie.
     else:
         objective_tuple.append((qs.residuals, 0, inputs.qsqi_weight))
     if inputs.include_iota_target:
