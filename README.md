@@ -43,7 +43,7 @@ To see live the results of the optimization check the file `output.txt` with, fo
 
 # Plots
 
-- After running the code, it is possible to obtain certain plots of the results which are not immediately created. 
+- After running the code, it is possible to obtain certain plots of the results which are not immediately created. They require the installation of VMEC2000 and booz_xform (# Requisites).
 
 - These are created and obtained by running `plot.py` file. 
 
