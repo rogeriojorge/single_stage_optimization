@@ -42,7 +42,7 @@ iota_target_QH = 0.7 # Target rotational transform iota
 aspect_ratio_target_QH = 7  # Target aspect ratio
 # QI
 vmec_input_start_QI = 'input.nfp1_QI' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QI = 4.5 # Threshold for the length of each coil
+LENGTHBOUND_QI = 5.0 # Threshold for the length of each coil
 CC_THRESHOLD_QI = 0.12 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QI = 10 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QI = 10 # Threshold for the mean squared curvature penalty in the objective function
@@ -67,14 +67,14 @@ maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the Q
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
 single_stage = False # Perform a single stage optimization
-order = 12 # Number of Fourier modes describing each Cartesian component of each coil
+order = 16 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
-max_modes = [2] # Fourier mode resolution for the plasma surface
-MAXITER_stage_1 = 10 # Number of iterations to perform in the stage 1 optimization
-MAXITER_stage_2_simple = 10 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
-MAXITER_stage_2 = 5 # Number of iterations to perform in the stage 2 optimization
-MAXITER_single_stage = 5 # Number of iterations to perform in the main optimization loop
+max_modes = [3] # Fourier mode resolution for the plasma surface
+MAXITER_stage_1 = 100 # Number of iterations to perform in the stage 1 optimization
+MAXITER_stage_2_simple = 1000 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
+MAXITER_stage_2 = 1000 # Number of iterations to perform in the stage 2 optimization
+MAXITER_single_stage = 2000 # Number of iterations to perform in the main optimization loop
 # Flags
 use_half_period = True # If not optimizing a CNT-like stellarator, set this to True for efficiency
 finite_beta = False # finite beta optimization not implemented yet
@@ -128,7 +128,7 @@ CS_THRESHOLD = 0.3 # Threshold for the coil-to-surface distance penalty in the o
 CS_WEIGHT = 3e-1 # Weight for the coil-to-surface distance penalty in the objective function
 CURVATURE_WEIGHT = 1e-4 # Weight for the curvature penalty in the objective function
 MSC_WEIGHT = 1e-4 # Weight for the mean squared curvature penalty in the objective function
-ARCLENGTH_WEIGHT = 5e-8 # Weight for the arclength variation penalty in the objective function
+ARCLENGTH_WEIGHT = 6e-7 # Weight for the arclength variation penalty in the objective function
 # Files and Folders
 executables_folder = "executables" # Directory where VMEC, BOOZ_XFORM, NEO executables are stored
 plotting_folder = "plotting" # Directory where the figures will be stored

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
 import sys
 import time
@@ -40,19 +40,19 @@ parser = argparse.ArgumentParser()
 # parser.add_argument("--results_folder",default='Paper_CNT_Stage123_Lengthbound3.8_ncoils4_circular')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils3_nfp2')
 # parser.add_argument("--results_folder",default='QA_Stage123_Lengthbound5.5_ncoils2_nfp3')
-parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound5.0_ncoils8_nfp1')
+parser.add_argument("--results_folder",default='QI_Stage13_Lengthbound5.5_ncoils8_3iter1500_modes2_nfp1')
 # parser.add_argument("--results_folder",default='QI_Stage123_Lengthbound4.5_ncoils3_nfp2')
 # parser.add_argument("--results_folder",default='QH_Stage123_Lengthbound3.5_ncoils3_nfp4')
-parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_3.json')
+parser.add_argument("--coils_stage1", default='biot_savart_inner_loop_max_mode_2.json')
 parser.add_argument("--create_QFM", dest="create_QFM", default=False, action="store_true")
 parser.add_argument("--create_QFM_stage12", dest="create_QFM_stage12", default=False, action="store_true")
 parser.add_argument("--create_Poincare", dest="create_Poincare", default=False, action="store_true")
-parser.add_argument("--whole_torus", dest="whole_torus", default=True, action="store_true")
+parser.add_argument("--whole_torus", dest="whole_torus", default=False, action="store_true")
 parser.add_argument("--plot_VMEC", dest="plot_VMEC", default=False, action="store_true")
 parser.add_argument("--plot_VMEC_QFM", dest="plot_VMEC_QFM", default=False, action="store_true")
 parser.add_argument("--volume_scale", type=float, default=1.0)
 parser.add_argument("--nfieldlines", type=int, default=12)
-parser.add_argument("--tmax_fl", type=int, default=5000)
+parser.add_argument("--tmax_fl", type=int, default=500)
 parser.add_argument("--nphi_QFM", type=int, default=30)
 parser.add_argument("--ntheta_QFM", type=int, default=40)
 parser.add_argument("--mpol", type=int, default=12)

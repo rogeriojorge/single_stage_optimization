@@ -79,7 +79,7 @@ def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):
     if args.stage2: stage_string+='2'
     if args.single_stage: stage_string+='3'
     if stage_string == '': stage_string = '123'
-    inputs.name = f'{QAorQHorQIorCNT}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{int(args.ncoils)}'
+    inputs.name = f'{QAorQHorQIorCNT}_Stage{stage_string}_Lengthbound{args.lengthbound:.1f}_ncoils{int(args.ncoils)}_3iter{args.MAXITER_single_stage}_modes{args.max_modes[0]}'
     if not QAorQHorQIorCNT=='CNT': inputs.name += f'_nfp{args.vmec_input_start[9:10]}'
     if QAorQHorQIorCNT=='CNT' and not inputs.FREE_TOP_BOTTOM_CNT: inputs.name += f'_circular'
     return inputs
