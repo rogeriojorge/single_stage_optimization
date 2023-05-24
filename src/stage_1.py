@@ -3,6 +3,7 @@ from simsopt import make_optimizable
 from simsopt.mhd import QuasisymmetryRatioResidual
 from simsopt.objectives import LeastSquaresProblem
 from .qi_functions import QuasiIsodynamicResidual, MirrorRatioPen, MaxElongationPen
+from .maxj_functions import maxJ_Residual
 
 def form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs):
     surf.fix_all()
@@ -16,6 +17,8 @@ def form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_bo
     qs = QuasisymmetryRatioResidual(vmec, inputs.quasisymmetry_target_surfaces, helicity_m=inputs.quasisymmetry_helicity_m, helicity_n=inputs.quasisymmetry_helicity_n)
     optQI = partial(QuasiIsodynamicResidual,snorms=inputs.snorms, nphi=inputs.nphi_QI, nalpha=inputs.nalpha_QI, nBj=inputs.nBj_QI, mpol=inputs.mpol_QI, ntor=inputs.ntor_QI, nphi_out=inputs.nphi_out_QI, arr_out=inputs.arr_out_QI)
     qi = make_optimizable(optQI, vmec)
+    optmax_j = partial(maxJ_Residual,snorms=inputs.snorms_maxj, flatten=True, nlambda=inputs.nlambda, try_alpha=inputs.try_alpha, eps=inputs.eps, phi_max=inputs.phi_max_maxj, pppi=inputs.pppi, mpol=inputs.mpol_maxj, ntor=inputs.ntor_maxj, nphi=inputs.nphi_maxj, ntheta=inputs.ntheta_maxj)
+    max_j = make_optimizable(optmax_j, vmec)
     partial_MaxElongationPen = partial(MaxElongationPen,t=inputs.maximum_elongation)
     optElongation = make_optimizable(partial_MaxElongationPen, vmec)
     partial_MirrorRatioPen = partial(MirrorRatioPen,t=inputs.maximum_mirror)
@@ -26,7 +29,9 @@ def form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_bo
         objective_tuple.append((optMirror.J, 0, inputs.mirror_weight)) #Diferença entre o max e o min do modulo do B numa superficie.
     else:
         objective_tuple.append((qs.residuals, 0, inputs.qsqi_weight))
+    if inputs.include_maxj_target:
+        objective_tuple.append((max_j.J, inputs.maxj_target, inputs.maxj_weight))
     if inputs.include_iota_target:
         objective_tuple.append((vmec.mean_iota, inputs.iota_target, inputs.iota_weight))
     prob = LeastSquaresProblem.from_tuples(objective_tuple)
-    return vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, number_vmec_dofs, prob
+    return vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, max_j, number_vmec_dofs, prob

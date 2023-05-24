@@ -20,22 +20,22 @@ FREE_TOP_BOTTOM_CNT = False # Do not keep the two bigger CNT optimization coils 
 order_CNT = 6 # Number of Fourier modes describing each Cartesian component of each coil in CNT
 # QA
 vmec_input_start_QA = 'input.nfp2_QA_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QA = 4 # Threshold for the length of each coil
+LENGTHBOUND_QA = 5.5 # Threshold for the length of each coil
 CC_THRESHOLD_QA = 0.1 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QA = 5 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QA = 5 # Threshold for the mean squared curvature penalty in the objective function
-ncoils_QA = 4 # Number of coils per half field period
+ncoils_QA = 2 # Number of coils per half field period
 quasisymmetry_helicity_n_QA = 0 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QA = True # Specify if iota should be added to the objective function
 iota_target_QA = 0.42 # Target rotational transform iota
 aspect_ratio_target_QA = 6  # Target aspect ratio
 # QH
 vmec_input_start_QH = 'input.nfp4_QH_optimized' # VMEC input file that serves as a start for the optimization when there are no previous results
-LENGTHBOUND_QH = 4 # Threshold for the length of each coil
+LENGTHBOUND_QH = 3.5 # Threshold for the length of each coil
 CC_THRESHOLD_QH = 0.08 # Threshold for the coil-to-coil distance penalty in the objective function
 CURVATURE_THRESHOLD_QH = 10 # Threshold for the curvature penalty in the objective function
 MSC_THRESHOLD_QH = 10 # Threshold for the mean squared curvature penalty in the objective function
-ncoils_QH = 5 # Number of coils per half field period
+ncoils_QH = 3 # Number of coils per half field period
 quasisymmetry_helicity_n_QH = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QH = False # Specify if iota should be added to the objective function
 iota_target_QH = 0.7 # Target rotational transform iota
@@ -45,13 +45,13 @@ vmec_input_start_QI = 'input.nfp1_QI' # VMEC input file that serves as a start f
 
 LENGTHBOUND_QI = 6.0 # Threshold for the length of each coil
 CC_THRESHOLD_QI = 0.12 # Threshold for the coil-to-coil distance penalty in the objective function
-CURVATURE_THRESHOLD_QI = 10 # Threshold for the curvature penalty in the objective function
-MSC_THRESHOLD_QI = 10 # Threshold for the mean squared curvature penalty in the objective function
+CURVATURE_THRESHOLD_QI = 5 # Threshold for the curvature penalty in the objective function
+MSC_THRESHOLD_QI = 5 # Threshold for the mean squared curvature penalty in the objective function
 ncoils_QI = 8 # Number of coils per half field period
 quasisymmetry_helicity_n_QI = -1 # Toroidal quasisymmetry integer N in |B|
 include_iota_target_QI = False # Specify if iota should be added to the objective function
 iota_target_QI = 0.61 # Target rotational transform iota
-aspect_ratio_target_QI = 7  # Target aspect ratio
+aspect_ratio_target_QI = 7.5  # Target aspect ratio
 elongation_weight = 1e2
 mirror_weight = 1e2
 snorms = [1/16, 5/16, 9/16, 13/16] # Flux surfaces at which the penalty will be calculated
@@ -64,6 +64,22 @@ nphi_out_QI=2000 # size of return array if arr_out_QI = True
 arr_out_QI=True # If True, returns (nphi_out*nalpha) values, each of which is the difference
 maximum_elongation = 6 # Defines the maximum elongation allowed in the QI elongation objective function
 maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the QI elongation objective function
+
+#Maximum J
+include_maxj_target = True
+maxj_target = -0.1 #Target value for the derivatives
+maxj_weight = 1 #Weight of the derivatives in the stage 1 objective function
+snorms_maxj = [5/16] # Flux surfaces at which the derivative will be calculated
+nlambda = 2 #Number of different values of lambda to test
+nphi_maxj = 8 #Resolution in the phi angle to build the 2D grid in theta and phi angle
+ntheta_maxj = 16 #Resolution in the theta angle to build the 2D grid in theta and phi angle 
+mpol_maxj = 10 #Poloidal modes in Boozer transformation
+ntor_maxj = 10 #Toroidal modes in Boozer transformation
+try_alpha = 1.6 #Value of the boozer mixed angle alpha for the calculation of the derivative
+phi_max_maxj = 7 #Maximum value of phi angle for obtaining turning points (v|| = 0)
+pppi = 8 #Points per pi rad
+eps = 1e-4 #Difference between points for the calculation of the numerical derivative
+
 # Generic
 stage_1 = False # Perform a stage-1 optimization
 stage_2 = False # Perform a stage-2 optimization
@@ -71,11 +87,11 @@ single_stage = False # Perform a single stage optimization
 order = 16 # Number of Fourier modes describing each Cartesian component of each coil
 ## General input parameters
 # Frequent use
-max_modes = [3] # Fourier mode resolution for the plasma surface
+max_modes = [1] # Fourier mode resolution for the plasma surface
 MAXITER_stage_1 = 100 # Number of iterations to perform in the stage 1 optimization
-MAXITER_stage_2_simple = 1000 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
-MAXITER_stage_2 = 1000 # Number of iterations to perform in the stage 2 optimization
-MAXITER_single_stage = 2333 # Number of iterations to perform in the main optimization loop
+MAXITER_stage_2_simple = 10 # Number of iterations to perform in the stage 2 optimization (squared flux and length only)
+MAXITER_stage_2 = 10 # Number of iterations to perform in the stage 2 optimization
+MAXITER_single_stage = 201 # Number of iterations to perform in the main optimization loop
 # Flags
 use_half_period = True # If not optimizing a CNT-like stellarator, set this to True for efficiency
 finite_beta = False # finite beta optimization not implemented yet

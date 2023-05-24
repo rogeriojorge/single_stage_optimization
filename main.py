@@ -207,7 +207,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
     for max_mode in inputs.max_modes:
         pprint(f' Optimization with max_mode={max_mode}')
         if max_mode != previous_max_mode: oustr_dict_inner=[]
-        vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
+        vmec, vmec_full_boundary, surf, surf_full_boundary, qs, qi, max_j, number_vmec_dofs, prob = form_stage_1_objective_function(vmec, vmec_full_boundary, surf, surf_full_boundary, max_mode, inputs)
         dofs = np.concatenate((JF.x, vmec.x))
         # Stage 1 Optimization
         if inputs.stage_1 and not ran_stage1:
@@ -349,6 +349,7 @@ if inputs.stage_1 or inputs.stage_2 or inputs.single_stage:
         pprint(f"Mean iota after optimization: {vmec.mean_iota()}")
         if not QAorQHorQIorCNT=='QI': pprint(f"Quasisymmetry objective after optimization: {qs.total()}")
         pprint(f"Squared flux after optimization: {Jf.J()}")
+        pprint(f"Maximum-J objective after optimization: {max_j.J()}")
     except Exception as e:
         pprint(e)
 os.chdir(current_path)
