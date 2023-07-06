@@ -66,7 +66,7 @@ maximum_elongation = 6 # Defines the maximum elongation allowed in the QI elonga
 maximum_mirror = 0.19 # Defines the maximum mirror ratio of |B| allowed in the QI elongation objective function
 
 #Maximum J
-include_maxj_target = True
+include_maxj_target = False
 maxj_target = -0.1 #Target value for the derivatives
 maxj_weight = 1 #Weight of the derivatives in the stage 1 objective function
 snorms_maxj = [5/16] # Flux surfaces at which the derivative will be calculated
