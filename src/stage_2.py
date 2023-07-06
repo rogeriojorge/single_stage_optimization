@@ -12,7 +12,7 @@ from scipy.optimize import minimize
 
 def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
     # Define the individual terms in the objective function
-    Jf = SquaredFlux(surf, bs)
+    Jf = SquaredFlux(surf, bs, definition='local')
     Jls = [CurveLength(c) for c in base_curves]
     Jccdist = CurveCurveDistance(curves, inputs.CC_THRESHOLD, num_basecurves=inputs.ncoils)
     # Jcsdist = CurveSurfaceDistance(curves, surf, inputs.CS_THRESHOLD)

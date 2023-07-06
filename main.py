@@ -172,7 +172,7 @@ class single_stage_obj_and_der():
                 B_n = Bcoil_n
                 B_diff = Bcoil
                 B_N = np.sum(Bcoil * n, axis=2)
-                assert Jf.local
+                assert Jf.definition=='local'
                 dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
                 dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
                 deriv = surf.dnormal_by_dcoeff_vjp(dJdN/(inputs.nphi*inputs.ntheta)) + surf.dgamma_by_dcoeff_vjp(dJdx/(inputs.nphi*inputs.ntheta))

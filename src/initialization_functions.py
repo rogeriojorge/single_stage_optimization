@@ -143,22 +143,22 @@ def create_initial_coils(vmec, parent_path, coils_results_path, inputs, surf_ful
         bs = BiotSavart(coils)
     else:
         bs_json_files = [file for file in os.listdir(coils_results_path) if '.json' in file]
-        if len(bs_json_files)==0:
-            bs_initial_file = os.path.join(parent_path, 'coil_inputs', f'biot_savart_nfp{vmec.indata.nfp}_{inputs.QAorQHorQIorCNT}_ncoils{inputs.ncoils}.json')
-            if inputs.use_initial_coils_if_available and os.path.isfile(bs_initial_file):
-                bs_temporary = load(bs_initial_file)
-                base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
-                base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
-            else:
-                base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
-                base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
-        else:
-            if os.path.exists(os.path.join(coils_results_path, inputs.resulting_field_json)):
-                bs_temporary = load(os.path.join(coils_results_path, inputs.resulting_field_json))
-            else:
-                bs_temporary = load(os.path.join(coils_results_path, bs_json_files[-1]))
-            base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
-            base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
+        #if len(bs_json_files)==0:
+            #bs_initial_file = os.path.join(parent_path, 'coil_inputs', f'biot_savart_nfp{vmec.indata.nfp}_{inputs.QAorQHorQIorCNT}_ncoils{inputs.ncoils}.json')
+            #if inputs.use_initial_coils_if_available and os.path.isfile(bs_initial_file):
+                #bs_temporary = load(bs_initial_file)
+                #base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
+                #base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
+            #else:
+        base_curves = create_equally_spaced_curves(inputs.ncoils, vmec.indata.nfp, stellsym=True, R0=inputs.R0, R1=inputs.R1, order=inputs.order)
+        base_currents = [Current(inputs.initial_current*1e-5)*1e5 for i in range(inputs.ncoils)]
+        #else:
+            #if os.path.exists(os.path.join(coils_results_path, inputs.resulting_field_json)):
+                #bs_temporary = load(os.path.join(coils_results_path, inputs.resulting_field_json))
+            #else:
+                #bs_temporary = load(os.path.join(coils_results_path, bs_json_files[-1]))
+            #base_curves = [bs_temporary.coils[i]._curve for i in range(inputs.ncoils)]
+            #base_currents = [bs_temporary.coils[i]._current for i in range(inputs.ncoils)]
         # Create the initial coils
         base_currents[0].fix_all()
         bs, coils, curves = create_initial_modular_coils(base_curves, base_currents, vmec.indata.nfp)
