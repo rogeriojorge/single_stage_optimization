@@ -29,7 +29,7 @@ CONFIG = {
 }
 nphi = 32   # surface vmec phi resolution
 ntheta = 32 # surface vmec theta resolution
-boozxform_nsurfaces = 15
+boozxform_nsurfaces = 14
 ## FOLDER STRUCTURE
 results_folder = 'results'
 coils_folder = 'coils'
