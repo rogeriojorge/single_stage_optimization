@@ -108,7 +108,7 @@ if mpi.proc0_world:
     from vmecPlot2 import main as vmecPlot2_main
     vmecPlot2_main(file="wout_final_freeb.nc", name="vmec_freeb", figures_folder=figures_folder, coils_curves=[c.curve for c in bs.coils[0:ncoils]])
     print('Creating Boozer class for vmec_final')
-    b1 = Boozer(vmec_final, mpol=64, ntor=64)
+    b1 = Boozer(vmec_freeb, mpol=64, ntor=64)
     print('Defining surfaces where to compute Boozer coordinates')
     booz_surfaces = np.linspace(0,1,boozxform_nsurfaces,endpoint=False)
     print(f' booz_surfaces={booz_surfaces}')
