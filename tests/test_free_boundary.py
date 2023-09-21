@@ -7,6 +7,7 @@ import shutil
 import numpy as np
 import booz_xform as bx
 from pathlib import Path
+from subprocess import run
 import matplotlib.pyplot as plt
 import matplotlib
 import warnings
@@ -74,7 +75,7 @@ with open(xgrid_output_location, 'w') as f:
     f.write(f'{nz}\n')
 print("Running makegrid")
 run_string = f"{mgrid_executable} < {xgrid_output_location} > {os.path.join('log_xgrid.opt_coils')}"
-# run(run_string, shell=True, check=True)
+run(run_string, shell=True, check=True)
 print(" done")
 
 print(vmec_file_input)
