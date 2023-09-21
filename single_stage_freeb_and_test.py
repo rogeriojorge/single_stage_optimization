@@ -34,10 +34,10 @@ warnings.filterwarnings("ignore",category=matplotlib.MatplotlibDeprecationWarnin
 run_optimization = False
 test_free_boundary = True
 plot_boozer = False
-config_name = 'nfp4_QH_finitebeta'
+config_name = 'nfp2_QA_finitebeta'#'nfp4_QH_finitebeta'
 mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
-aspect_ratio_target = 7
+aspect_ratio_target = 6#7
 aspect_ratio_weight = 1e1
 max_modes = [1,1,2,3]
 coils_objective_weight = 3e+3
@@ -51,7 +51,7 @@ R1 = 0.4
 order = 12
 nphi = 32
 ntheta = 32
-LENGTH_THRESHOLD = 3.3
+LENGTH_THRESHOLD = 4#3.3
 vc_src_nphi = ntheta
 boozxform_nsurfaces = 14
 #############################################
@@ -59,9 +59,9 @@ quasisymmetry_target_surfaces = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
 finite_difference_abs_step = 1e-6
 finite_difference_rel_step = 0
 JACOBIAN_THRESHOLD = 100
-CC_THRESHOLD = 0.08
-CURVATURE_THRESHOLD = 7
-MSC_THRESHOLD = 10
+CC_THRESHOLD = 0.1#0.08
+CURVATURE_THRESHOLD = 5#7
+MSC_THRESHOLD = 5#10
 LENGTH_CON_WEIGHT = 0.1  # Weight on the quadratic penalty for the curve length
 LENGTH_WEIGHT = 1e-8  # Weight on the curve lengths in the objective function
 CC_WEIGHT = 1e+0  # Weight for the coil-to-coil distance penalty in the objective function
@@ -200,6 +200,8 @@ if run_optimization:
         qs = QuasisymmetryRatioResidual(vmec, quasisymmetry_target_surfaces, helicity_m=1, helicity_n=-1)
         number_vmec_dofs = int(len(surf.x))
         objective_tuple = [(vmec.aspect, aspect_ratio_target, aspect_ratio_weight), (qs.residuals, 0, 1)]
+        if 'QA' in config_name:
+            objective_tuple.append[(vmec.mean_iota, 0.42, 1)]
         prob = LeastSquaresProblem.from_tuples(objective_tuple)
         if optimize_stage_1:
             least_squares_mpi_solve(prob, mpi, grad=True, rel_step=1e-5, abs_step=1e-8, max_nfev=MAXITER_stage_1)
