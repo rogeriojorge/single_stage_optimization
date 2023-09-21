@@ -1,8 +1,0 @@
-============================================
-Starting single stage optimization
-============================================
- Using vmec input file /marconi_scratch/userexternal/rjorge00/single_stage_optimization/vmec_inputs/input.nfp2_QI
- Starting optimization with max_mode=3
-  Forming stage 1 objective function
-  Forming stage 2 objective function
-  Performing Stage 1 optimization with 50.0 iterations

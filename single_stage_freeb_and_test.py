@@ -39,12 +39,12 @@ mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
 aspect_ratio_target = 7
 aspect_ratio_weight = 1e1
-max_modes = [2,3]
+max_modes = [3]
 coils_objective_weight = 3e+3
 MAXITER_stage_2 = 350
 optimize_stage_1 = False
 MAXITER_stage_1 = 30
-MAXITER_single_stage = 35
+MAXITER_single_stage = 3
 ncoils = 4
 R0 = 1.0
 R1 = 0.4
@@ -307,10 +307,11 @@ if run_optimization:
     proc0_print('Running VMEC final')
     vmec_final = Vmec(os.path.join(out_dir, f'input.final'), verbose=True, ntheta=ntheta, nphi=nphi, mpi=mpi)
     vmec_final.run()
+    mpi.comm_world.barrier()
     ### PLOT
     if mpi.proc0_world:
         if os.path.exists("wout_final_000_000000.nc"): shutil.move("wout_final_000_000000.nc", "wout_final.nc")
-        vmecPlot2_main(file="wout_final.nc", name=config_name, figures_folder=figures_results_path, coils_curves=[c.curve for c in bs.coils[0:ncoils]])
+        vmecPlot2_main(file="wout_final.nc", name=config_name, figures_folder=figures_results_path)
         if plot_boozer:
             print('Creating Boozer class for vmec_final')
             b1 = Boozer(vmec, mpol=64, ntor=64)
@@ -320,7 +321,7 @@ if run_optimization:
             b1.register(booz_surfaces)
             print('Running BOOZ_XFORM')
             b1.run()
-            b1.bx.write_boozmn("boozmn_"+config_name+".nc")
+            # b1.bx.write_boozmn("boozmn_"+config_name+".nc")
             print("Plot BOOZ_XFORM")
             fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
             plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
@@ -338,12 +339,13 @@ if run_optimization:
             plt.savefig(os.path.join(figures_results_path, "Boozxform_modeplot_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
 #############################################
 if test_free_boundary and comm_world.rank == 0:
+    print('Testing free boundary')
     bs = load(os.path.join(coils_results_path, "biot_savart_opt.json"))
     curves = [c.curve for c in bs.coils]
     s      = Vmec(os.path.join(out_dir, f'wout_final.nc'), verbose=False, ntheta=ntheta, nphi=nphi, mpi=mpi, range_surface='half period').boundary
     s_full = Vmec(os.path.join(out_dir, f'wout_final.nc'), verbose=False, ntheta=ntheta, nphi=nphi*2*s.nfp, mpi=mpi, range_surface='full torus').boundary
     vc = VirtualCasing.from_vmec(Vmec(os.path.join(out_dir, f'wout_final.nc')), src_nphi=vc_src_nphi, trgt_nphi=nphi, trgt_ntheta=ntheta, filename=None)
-
+    print('Virtual Casing loaded')
     ########### PLOT ON FULL BOUNDARY ###########
     bs.set_points(s_full.gamma().reshape((-1, 3)))
     Bbs = bs.B().reshape((nphi*2*surf.nfp, ntheta, 3))
@@ -409,7 +411,7 @@ if test_free_boundary and comm_world.rank == 0:
     # vmec_freeb.run()
     if os.path.exists("wout_final_freeb_000_000000.nc"): shutil.move("wout_final_freeb_000_000000.nc", "wout_final_freeb.nc")
     # os.remove("wout_final_freeb_000_000000.nc")
-    vmecPlot2_main(file="wout_final_freeb.nc", name="vmec_freeb", figures_folder=figures_results_path, coils_curves=[c.curve for c in bs.coils[0:ncoils]])
+    vmecPlot2_main(file="wout_final_freeb.nc", name="vmec_freeb", figures_folder=figures_results_path)
     if plot_boozer:
         print('Creating Boozer class for vmec_freeb')
         vmec_freeb = Vmec("wout_final_freeb.nc", mpi=mpi, verbose=False)
@@ -420,7 +422,7 @@ if test_free_boundary and comm_world.rank == 0:
         b1.register(booz_surfaces)
         print('Running BOOZ_XFORM')
         b1.run()
-        b1.bx.write_boozmn("boozmn_"+config_name+"_freeb.nc")
+        # b1.bx.write_boozmn("boozmn_"+config_name+"_freeb.nc")
         print("Plot BOOZ_XFORM")
         fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
         plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+config_name+'_freeb.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()

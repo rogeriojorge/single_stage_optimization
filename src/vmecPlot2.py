@@ -19,7 +19,7 @@ def main(file,name='',figures_folder='.', coils_curves=None, s_plot_ignore=0.2,s
     iotas = f.variables['iotas'][()]
     pres = f.variables['pres'][()]
     ns = f.variables['ns'][()]
-    nfp = f.variables['nfp'][()]
+    nfp = max(1,f.variables['nfp'][()])
     xn = f.variables['xn'][()]
     xm = f.variables['xm'][()]
     xn_nyq = f.variables['xn_nyq'][()]
