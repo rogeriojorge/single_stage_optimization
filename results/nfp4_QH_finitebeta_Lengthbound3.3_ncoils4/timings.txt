@@ -1,0 +1,66 @@
+ ====================== PARALLEL TIMINGS ====================
+               total  :       92.617911
+                rank  :               0
+mgrid file read time  :        0.026068
+        No. of procs  :               1
+
+      --- non-vacuum  :            6671             51              1      45.082693
+
+            VNRANKS   :               1
+         --- vacuum   :              51      47.292818
+
+             runvmec  :       92.617833
+
+         init radial  :        0.000000
+             eqsolve  :       92.538062
+             fileout  :        0.051664
+
+              evolve  :       92.511264
+             funct3d  :       92.375511
+            nfunct3d  :            6673
+
+             totzsps  :        9.448277
+             totzspa  :        0.000000
+              symrzl  :        0.000000
+            jacobian  :        1.197454
+              bcovar  :        5.443263
+              vacuum  :       47.292818
+
+            - precal  :        0.000126
+           - surface  :        0.994656
+
+           - bextern  :        2.950500
+
+           -- becoil  :        0.036748
+           -- tolicu  :        0.000000
+           -- belicu  :        2.862717
+
+           - scalpot  :      -38.740002
+
+           -- analyt  :        6.311390
+           -- greenf  :       13.842260
+            -- fourp  :       10.617245
+            -- fouri  :        7.039774
+
+            - solver  :        4.099788
+
+               alias  :        4.159309
+              forces  :        6.596102
+           symforces  :        0.000000
+             tomnsps  :        9.650316
+             tomnspa  :        0.000000
+             residue  :        7.889703
+          -- tridslv  :        7.485005
+
+ ============================================================
+
+           allgather  :        0.000000
+           allreduce  :        0.052579
+           broadcast  :        0.008702
+           sendrecv   :        0.036415
+
+     Fill_blocks      :        0.000000
+     Compute blocks   :        0.000000
+     Forward solve    :        0.000000
+     Backward solve   :        0.000000
+ ============================================================

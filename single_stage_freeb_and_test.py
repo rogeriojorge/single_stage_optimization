@@ -31,7 +31,7 @@ matplotlib.use('Agg')
 this_path = Path(__file__).parent.resolve()
 warnings.filterwarnings("ignore",category=matplotlib.MatplotlibDeprecationWarning)
 #############################################
-run_optimization = True
+run_optimization = False
 test_free_boundary = True
 plot_boozer = False
 config_name = 'nfp4_QH_finitebeta'
@@ -39,12 +39,12 @@ mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
 aspect_ratio_target = 7
 aspect_ratio_weight = 1e1
-max_modes = [3]
+max_modes = [1,1,2,3]
 coils_objective_weight = 3e+3
 MAXITER_stage_2 = 350
 optimize_stage_1 = False
 MAXITER_stage_1 = 30
-MAXITER_single_stage = 3
+MAXITER_single_stage = 50
 ncoils = 4
 R0 = 1.0
 R1 = 0.4
@@ -399,7 +399,7 @@ if test_free_boundary and comm_world.rank == 0:
     vmec_final.indata.ftol_array[:]  = [0]*len(vmec_final.indata.ftol_array)
     vmec_final.indata.ns_array[:1]    = [   51]#[  151]
     vmec_final.indata.niter_array[:1] = [10000]#10000]
-    vmec_final.indata.ftol_array[:1]  = [1e-11]#[1e-14]
+    vmec_final.indata.ftol_array[:1]  = [1e-14]#[1e-14]
     vmec_final.indata.mpol = 6
     vmec_final.indata.ntor = 6
     vmec_final.indata.phiedge = np.abs(vmec_final.indata.phiedge)
