@@ -17,6 +17,7 @@ from simsopt import make_optimizable
 from simsopt._core.util import ObjectiveFailure
 from simsopt.field.coil import coils_to_makegrid
 from src.vmecPlot2 import main as vmecPlot2_main
+from simsopt.solve import least_squares_mpi_solve
 from simsopt._core.finite_difference import MPIFiniteDifference
 from simsopt.field import Current, coils_via_symmetries, BiotSavart
 from simsopt.mhd import Vmec, QuasisymmetryRatioResidual, VirtualCasing, Boozer
@@ -39,8 +40,10 @@ vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
 aspect_ratio_target = 7
 aspect_ratio_weight = 1e1
 max_modes = [1,2,3]
-coils_objective_weight = 5e+3
-MAXITER_stage_2 = 350
+coils_objective_weight = 1e+3
+MAXITER_stage_2 = 30
+optimize_stage_1 = False
+MAXITER_stage_1 = 30
 MAXITER_single_stage = 35
 ncoils = 4
 R0 = 1.0
@@ -186,8 +189,8 @@ def fun(dofss, prob_jacobian, info={'Nfeval': 0}):
 if run_optimization:
     for max_mode in max_modes:
         proc0_print(f"Running optimization with max_mode={max_mode}")
-        vmec.indata.mpol = max_mode+2
-        vmec.indata.ntor = max_mode+2
+        vmec.indata.mpol = max(5,max_mode+2)
+        vmec.indata.ntor = max(5,max_mode+2)
         surf.fix_all()
         surf_full_boundary.fix_all()
         surf.fixed_range(mmin=0, mmax=max_mode, nmin=-max_mode, nmax=max_mode, fixed=False)
@@ -198,6 +201,9 @@ if run_optimization:
         number_vmec_dofs = int(len(surf.x))
         objective_tuple = [(vmec.aspect, aspect_ratio_target, aspect_ratio_weight), (qs.residuals, 0, 1)]
         prob = LeastSquaresProblem.from_tuples(objective_tuple)
+        if optimize_stage_1:
+            least_squares_mpi_solve(prob, mpi, grad=True, rel_step=1e-5, abs_step=1e-8, max_nfev=MAXITER_stage_1)
+            vmec.write_input(os.path.join(vmec_results_path, f'input.max_mode{max_mode}_afetr_stage1'))
         previous_surf_dofs = prob.x
         JF.full_unfix(free_coil_dofs)  # Needed to evaluate JF.dJ
         dofs = np.concatenate((JF.x, vmec.x))
