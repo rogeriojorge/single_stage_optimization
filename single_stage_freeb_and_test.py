@@ -33,7 +33,7 @@ warnings.filterwarnings("ignore",category=matplotlib.MatplotlibDeprecationWarnin
 #############################################
 run_optimization = False
 test_free_boundary = True
-plot_boozer = False
+plot_boozer = True
 config_name = 'nfp2_QA_finitebeta'#'nfp4_QH_finitebeta'
 mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
@@ -51,7 +51,7 @@ R1 = 0.4
 order = 12
 nphi = 32
 ntheta = 32
-LENGTH_THRESHOLD = 4#3.3
+LENGTH_THRESHOLD = 4.5#3.3
 vc_src_nphi = ntheta
 boozxform_nsurfaces = 14
 #############################################
@@ -201,7 +201,7 @@ if run_optimization:
         number_vmec_dofs = int(len(surf.x))
         objective_tuple = [(vmec.aspect, aspect_ratio_target, aspect_ratio_weight), (qs.residuals, 0, 1)]
         if 'QA' in config_name:
-            objective_tuple.append[(vmec.mean_iota, 0.42, 1)]
+            objective_tuple.append((vmec.mean_iota, 0.42, 1))
         prob = LeastSquaresProblem.from_tuples(objective_tuple)
         if optimize_stage_1:
             least_squares_mpi_solve(prob, mpi, grad=True, rel_step=1e-5, abs_step=1e-8, max_nfev=MAXITER_stage_1)
@@ -302,7 +302,7 @@ if run_optimization:
         bs.save(os.path.join(coils_results_path, "biot_savart_opt.json"))
     #### Create final VMEC files
     vmec.indata.ns_array[:1]    = [  151]
-    vmec.indata.niter_array[:1] = [10000]
+    vmec.indata.niter_array[:1] = [20000]
     vmec.indata.ftol_array[:1]  = [1e-14]
     vmec.write_input(os.path.join(out_dir, f'input.final'))
     mpi.comm_world.barrier()
@@ -399,9 +399,9 @@ if test_free_boundary and comm_world.rank == 0:
     vmec_final.indata.ns_array[:]    = [0]*len(vmec_final.indata.ns_array)
     vmec_final.indata.niter_array[:] = [0]*len(vmec_final.indata.niter_array)
     vmec_final.indata.ftol_array[:]  = [0]*len(vmec_final.indata.ftol_array)
-    vmec_final.indata.ns_array[:1]    = [   51]#[  151]
-    vmec_final.indata.niter_array[:1] = [10000]#10000]
-    vmec_final.indata.ftol_array[:1]  = [1e-14]#[1e-14]
+    vmec_final.indata.ns_array[:1]    = [   51]
+    vmec_final.indata.niter_array[:1] = [20000]
+    vmec_final.indata.ftol_array[:1]  = [1e-14]
     vmec_final.indata.mpol = 6
     vmec_final.indata.ntor = 6
     vmec_final.indata.phiedge = np.abs(vmec_final.indata.phiedge)
