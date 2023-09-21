@@ -39,9 +39,9 @@ mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
 aspect_ratio_target = 7
 aspect_ratio_weight = 1e1
-max_modes = [1,2,3]
-coils_objective_weight = 1e+3
-MAXITER_stage_2 = 30
+max_modes = [2,3]
+coils_objective_weight = 3e+3
+MAXITER_stage_2 = 350
 optimize_stage_1 = False
 MAXITER_stage_1 = 30
 MAXITER_single_stage = 35
@@ -56,7 +56,7 @@ vc_src_nphi = ntheta
 boozxform_nsurfaces = 14
 #############################################
 quasisymmetry_target_surfaces = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
-finite_difference_abs_step = 1e-7
+finite_difference_abs_step = 1e-6
 finite_difference_rel_step = 0
 JACOBIAN_THRESHOLD = 100
 CC_THRESHOLD = 0.08
@@ -244,7 +244,7 @@ if run_optimization:
         # free_coil_dofs = JF.dofs_free_status
         with MPIFiniteDifference(opt.J, mpi, diff_method="forward", abs_step=finite_difference_abs_step, rel_step=finite_difference_rel_step) as prob_jacobian:
             if mpi.proc0_world:
-                res = minimize(fun, dofs, args=(prob_jacobian, {'Nfeval': 0}), jac=True, method='BFGS', options={'maxiter': MAXITER_single_stage}, tol=1e-9)
+                res = minimize(fun, dofs, args=(prob_jacobian, {'Nfeval': 0}), jac=True, method='BFGS', options={'maxiter': MAXITER_single_stage}, tol=1e-5)
         os.chdir(out_dir)
         surf_full_boundary.x = surf.x
         if comm_world.rank == 0:
