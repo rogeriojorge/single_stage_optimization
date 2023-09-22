@@ -10,6 +10,7 @@ from math import isnan
 import matplotlib.cbook
 import booz_xform as bx
 from pathlib import Path
+from simsopt.mhd.vmec_diagnostics import B_cartesian
 from subprocess import run
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
@@ -20,24 +21,25 @@ from src.vmecPlot2 import main as vmecPlot2_main
 from simsopt.solve import least_squares_mpi_solve
 from simsopt._core.finite_difference import MPIFiniteDifference
 from simsopt.field import Current, coils_via_symmetries, BiotSavart
-from simsopt.mhd import Vmec, QuasisymmetryRatioResidual, VirtualCasing, Boozer
+from simsopt.mhd import Vmec, QuasisymmetryRatioResidual, VirtualCasing, Boozer, vmec_compute_geometry
 from simsopt.geo import (CurveLength, CurveCurveDistance, MeanSquaredCurvature,
                          LpCurveCurvature, ArclengthVariation, curves_to_vtk, create_equally_spaced_curves)
 from simsopt.objectives import SquaredFlux, QuadraticPenalty, LeastSquaresProblem
 from simsopt.util import MpiPartition, proc0_print, comm_world
 from simsopt import load, save
 mpi = MpiPartition()
-matplotlib.use('Agg') 
+# matplotlib.use('Agg') 
 this_path = Path(__file__).parent.resolve()
 warnings.filterwarnings("ignore",category=matplotlib.MatplotlibDeprecationWarning)
 #############################################
 run_optimization = False
 test_free_boundary = True
 plot_boozer = True
-config_name = 'nfp2_QA_finitebeta'#'nfp4_QH_finitebeta'
+plot_configuration = True
+config_name = 'nfp4_QH_finitebeta'#'nfp2_QA_finitebeta'#'nfp4_QH_finitebeta'
 mgrid_executable = '/Users/rogeriojorge/bin/xgrid'
 vmec_executable = '/Users/rogeriojorge/bin/xvmec2000'
-aspect_ratio_target = 6#7
+aspect_ratio_target = 7
 aspect_ratio_weight = 1e1
 max_modes = [1,1,2,3]
 coils_objective_weight = 3e+3
@@ -48,10 +50,10 @@ MAXITER_single_stage = 50
 ncoils = 4
 R0 = 1.0
 R1 = 0.4
-order = 12
-nphi = 32
-ntheta = 32
-LENGTH_THRESHOLD = 4.5#3.3
+order = 14
+nphi = 26
+ntheta = 24
+LENGTH_THRESHOLD = 3.3
 vc_src_nphi = ntheta
 boozxform_nsurfaces = 14
 #############################################
@@ -59,9 +61,9 @@ quasisymmetry_target_surfaces = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
 finite_difference_abs_step = 1e-6
 finite_difference_rel_step = 0
 JACOBIAN_THRESHOLD = 100
-CC_THRESHOLD = 0.1#0.08
-CURVATURE_THRESHOLD = 5#7
-MSC_THRESHOLD = 5#10
+CC_THRESHOLD = 0.08
+CURVATURE_THRESHOLD = 7
+MSC_THRESHOLD = 10
 LENGTH_CON_WEIGHT = 0.1  # Weight on the quadratic penalty for the curve length
 LENGTH_WEIGHT = 1e-8  # Weight on the curve lengths in the objective function
 CC_WEIGHT = 1e+0  # Weight for the coil-to-coil distance penalty in the objective function
@@ -96,7 +98,9 @@ base_currents += [total_current - sum(base_currents)]
 coils = coils_via_symmetries(base_curves, base_currents, surf.nfp, True)
 curves = [c.curve for c in coils]
 bs = BiotSavart(coils)
+bs = load(os.path.join(coils_results_path, "biot_savart_opt.json"))
 bs.set_points(surf.gamma().reshape((-1, 3)))
+
 if comm_world.rank == 0:
     ########### PLOT ON FULL BOUNDARY ###########
     bs.set_points(surf_full_boundary.gamma().reshape((-1, 3)))
@@ -157,8 +161,18 @@ def fun_J(prob, coils_prob):
             Jf.target = vc.B_external_normal
         except ObjectiveFailure as e:
             pass
+
+    bs.set_points(vc.trgt_surf.gamma().reshape((-1, 3)))
+    Bvmec = np.transpose(np.array(B_cartesian(vmec, quadpoints_phi=vc.trgt_surf.quadpoints_phi,
+                                            quadpoints_theta=vc.trgt_surf.quadpoints_theta)),(1,2,0))
+    Bvirtualcasing = vc.B_external
+    Bcoil = bs.B().reshape(Bvirtualcasing.shape)
+    Bsquared_interface = np.sum((Bcoil - Bvirtualcasing)*(Bcoil - Bvirtualcasing + 2*Bvmec),axis=-1)
+    sum_Bsquared_interface = np.sum(Bsquared_interface**2)
+
     bs.set_points(surf.gamma().reshape((-1, 3)))
-    J_stage_2 = coils_objective_weight * JF.J()
+
+    J_stage_2 = coils_objective_weight * JF.J() + sum_Bsquared_interface
     J = J_stage_1 + J_stage_2
     return J
 #############################################
@@ -310,35 +324,35 @@ if run_optimization:
     vmec_final = Vmec(os.path.join(out_dir, f'input.final'), verbose=True, ntheta=ntheta, nphi=nphi, mpi=mpi)
     vmec_final.run()
     mpi.comm_world.barrier()
-    ### PLOT
-    if mpi.proc0_world:
-        if os.path.exists("wout_final_000_000000.nc"): shutil.move("wout_final_000_000000.nc", "wout_final.nc")
-        vmecPlot2_main(file="wout_final.nc", name=config_name, figures_folder=figures_results_path)
-        if plot_boozer:
-            print('Creating Boozer class for vmec_final')
-            b1 = Boozer(vmec, mpol=64, ntor=64)
-            print('Defining surfaces where to compute Boozer coordinates')
-            booz_surfaces = np.linspace(0,1,boozxform_nsurfaces,endpoint=False)
-            print(f' booz_surfaces={booz_surfaces}')
-            b1.register(booz_surfaces)
-            print('Running BOOZ_XFORM')
-            b1.run()
-            # b1.bx.write_boozmn("boozmn_"+config_name+".nc")
-            print("Plot BOOZ_XFORM")
-            fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
-            plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-            fig = plt.figure(); bx.surfplot(b1.bx, js=int(boozxform_nsurfaces/2), fill=False, ncontours=35)
-            plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_2_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-            fig = plt.figure(); bx.surfplot(b1.bx, js=boozxform_nsurfaces-1, fill=False, ncontours=35)
-            plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_3_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-            if 'QH' in config_name:
-                helical_detail = True
-            else:
-                helical_detail = False
-            fig = plt.figure(); bx.symplot(b1.bx, helical_detail = helical_detail, sqrts=True)
-            plt.savefig(os.path.join(figures_results_path, "Boozxform_symplot_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
-            fig = plt.figure(); bx.modeplot(b1.bx, sqrts=True); plt.xlabel(r'$s=\psi/\psi_b$')
-            plt.savefig(os.path.join(figures_results_path, "Boozxform_modeplot_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
+### PLOT
+if mpi.proc0_world and plot_configuration:
+    if os.path.exists("wout_final_000_000000.nc"): shutil.move("wout_final_000_000000.nc", "wout_final.nc")
+    vmecPlot2_main(file="wout_final.nc", name=config_name, figures_folder=figures_results_path)
+    if plot_boozer:
+        print('Creating Boozer class for vmec_final')
+        b1 = Boozer(Vmec("wout_final.nc", verbose=False), mpol=64, ntor=64)
+        print('Defining surfaces where to compute Boozer coordinates')
+        booz_surfaces = np.linspace(0,1,boozxform_nsurfaces,endpoint=False)
+        print(f' booz_surfaces={booz_surfaces}')
+        b1.register(booz_surfaces)
+        print('Running BOOZ_XFORM')
+        b1.run()
+        # b1.bx.write_boozmn("boozmn_"+config_name+".nc")
+        print("Plot BOOZ_XFORM")
+        fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
+        plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
+        fig = plt.figure(); bx.surfplot(b1.bx, js=int(boozxform_nsurfaces/2), fill=False, ncontours=35)
+        plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_2_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
+        fig = plt.figure(); bx.surfplot(b1.bx, js=boozxform_nsurfaces-1, fill=False, ncontours=35)
+        plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_3_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
+        if 'QH' in config_name:
+            helical_detail = True
+        else:
+            helical_detail = False
+        fig = plt.figure(); bx.symplot(b1.bx, helical_detail = helical_detail, sqrts=True)
+        plt.savefig(os.path.join(figures_results_path, "Boozxform_symplot_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
+        fig = plt.figure(); bx.modeplot(b1.bx, sqrts=True); plt.xlabel(r'$s=\psi/\psi_b$')
+        plt.savefig(os.path.join(figures_results_path, "Boozxform_modeplot_"+config_name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
 #############################################
 if test_free_boundary and comm_world.rank == 0:
     print('Testing free boundary')
