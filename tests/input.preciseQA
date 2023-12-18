@@ -4,9 +4,10 @@
   NITER = 10000
   NSTEP =  200
   TCON0 =   2.00E+00
-  NS_ARRAY    =      16       30
-  NITER_ARRAY =     600     2500
-  FTOL_ARRAY  = 1.0E-13  1.0E-12
+
+  NS_ARRAY    =      16!       30
+  NITER_ARRAY =    3000!     3500
+  FTOL_ARRAY  = 1.0E-11!  1.0E-12
 
 !  NS_ARRAY    =      12      25      50      75     100     150     201
 !  NITER_ARRAY =    1200    2000    3000    4000    5000    6000   20000

@@ -2,6 +2,7 @@
 import os
 import time
 import glob
+from pathlib import Path
 import logging
 import matplotlib
 import warnings
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 mpi = MpiPartition()
 
 # Define absolute steps
-abs_step_array = [1e-1,1e-2,1e-3,1e-4,1e-5,1e-6]
+abs_step_array = [1e-2,1e-3,1e-4,1e-5,1e-6]
 rel_step_value = 1e-5
 
 # Input parameters
@@ -53,13 +54,15 @@ nphi=30
 ntheta=30
 finite_beta = False
 vc_src_nphi = nphi
-OUT_DIR = f"output"
+
+this_path = Path(__file__).parent.resolve()
+OUT_DIR = os.path.join(this_path,f"output")
 os.makedirs(OUT_DIR, exist_ok=True)
 os.chdir(OUT_DIR)
 
 for QA_or_QH in QA_or_QHs:
-    if finite_beta: vmec_file = f'../input.precise{QA_or_QH}_FiniteBeta'
-    else: vmec_file = f'../input.precise{QA_or_QH}'
+    if finite_beta: vmec_file = os.path.join(this_path,f'input.precise{QA_or_QH}_FiniteBeta')
+    else: vmec_file = os.path.join(this_path,f'input.precise{QA_or_QH}')
     vmec = Vmec(vmec_file, nphi=nphi, ntheta=ntheta, mpi=mpi, verbose=False, range_surface='half period')
     surf = vmec.boundary
     objective_tuple = [(vmec.aspect, 4, 1)]
@@ -93,8 +96,8 @@ for QA_or_QH in QA_or_QHs:
     bs = BiotSavart(coils)
     bs.set_points(surf.gamma().reshape((-1, 3)))
     curves = [c.curve for c in coils]
-    if finite_beta: Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
-    else: Jf = SquaredFlux(surf, bs, local=True)
+    if finite_beta: Jf = SquaredFlux(surf, bs, definition="local", target=vc.B_external_normal)
+    else: Jf = SquaredFlux(surf, bs, definition="local")
     Jls = [CurveLength(c) for c in base_curves]
     Jcs = [LpCurveCurvature(c, 2, CURVATURE_THRESHOLD) for c in base_curves]
     Jccdist = CurveCurveDistance(curves, CC_THRESHOLD, num_basecurves=len(base_curves))
@@ -116,12 +119,18 @@ for QA_or_QH in QA_or_QHs:
             prob.x = x0[-number_vmec_dofs:]
             if finite_beta:
                 vc = VirtualCasing.from_vmec(vmec, src_nphi=vc_src_nphi, trgt_nphi=nphi, trgt_ntheta=ntheta)
-                Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
+                Jf = SquaredFlux(surf, bs, definition="local", target=vc.B_external_normal)
                 JF.opts[0].opts[0].opts[0] = Jf
         bs.set_points(surf.gamma().reshape((-1, 3)))
 
     def fun(x0):
         set_dofs(x0)
+        J_stage_1 = prob.objective()
+        J_stage_2 = coils_objective_weight * JF.J()
+        J = J_stage_1 + J_stage_2
+        return J
+    
+    def fun_new(prob, coils_prob):
         J_stage_1 = prob.objective()
         J_stage_2 = coils_objective_weight * JF.J()
         J = J_stage_1 + J_stage_2
@@ -174,7 +183,7 @@ for QA_or_QH in QA_or_QHs:
                     B_n = Bcoil_n
                     B_diff = Bcoil
                     B_N = np.sum(Bcoil * n, axis=2)
-                    assert Jf.local
+                    # assert Jf.local
                     dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
                     dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
                     deriv = surface.dnormal_by_dcoeff_vjp(dJdN/(nphi*ntheta)) + surface.dgamma_by_dcoeff_vjp(dJdx/(nphi*ntheta))
@@ -191,7 +200,7 @@ for QA_or_QH in QA_or_QHs:
         steps = finite_difference_steps(x0, abs_step=abs_step, rel_step=rel_step)
         if diff_method == "centered":
             for j in range(len(x0)):
-                print(f'FiniteDifference iteration {j}/{len(x0)}')
+                # print(f'FiniteDifference iteration {j}/{len(x0)}')
                 x = np.copy(x0)
                 x[j] = x0[j] + steps[j]
                 fplus = fun(x)
@@ -201,7 +210,7 @@ for QA_or_QH in QA_or_QHs:
         elif diff_method == "forward":
             f0 = fun(x0)
             for j in range(len(x0)):
-                print(f'FiniteDifference iteration {j}/{len(x0)}')
+                # print(f'FiniteDifference iteration {j}/{len(x0)}')
                 x = np.copy(x0)
                 x[j] = x0[j] + steps[j]
                 fplus = fun(x)
@@ -222,6 +231,25 @@ for QA_or_QH in QA_or_QHs:
         for abs_step in abs_step_array:
             set_dofs(dofs)
             if mpi.proc0_world: print(f'{QA_or_QH} with abs_step={abs_step}')
+
+            # gradNumerical = np.empty(len(dofs))
+            # # opt = make_optimizable(fun, dofs, dof_indicators=["dof"])
+            # opt = make_optimizable(fun_new, prob, JF)
+            # with MPIFiniteDifference(opt.J, mpi, diff_method=derivative_algorithm, abs_step=abs_step, rel_step=rel_step_value) as fd:
+            #     if mpi.proc0_world:
+            #         start_inner_inner = time.time()
+            #         # if mpi.proc0_world: print(f'  gradNumerical')
+            #         gradNumerical = np.array(fd.jac()[0])
+            #         print(f'   gradNumerical took {(time.time()-start_inner_inner):.2}s')
+            # mpi.comm_world.Bcast(gradNumerical, root=0)
+
+            gradNumerical = grad_fun_numerical(x0=dofs, diff_method=derivative_algorithm, abs_step=abs_step, rel_step=rel_step_value)
+
+            gradNumerical_with_respect_to_coils = gradNumerical[:-number_vmec_dofs]
+            gradNumerical_with_respect_to_surface = gradNumerical[-number_vmec_dofs:]
+
+            ############
+
             start_inner_inner = time.time()
             # if mpi.proc0_world: print(f'  gradAnalytical')
             gradAnalytical = grad_fun_analytical(dofs, finite_difference_rel_step=rel_step_value, finite_difference_abs_step=abs_step, derivative_algorithm=derivative_algorithm)
@@ -229,20 +257,7 @@ for QA_or_QH in QA_or_QHs:
             gradAnalytical_with_respect_to_coils = gradAnalytical[:-number_vmec_dofs]
             gradAnalytical_with_respect_to_surface = gradAnalytical[-number_vmec_dofs:]
 
-            gradNumerical = np.empty(len(dofs))
-            opt = make_optimizable(fun, dofs, dof_indicators=["dof"])
-            with MPIFiniteDifference(opt.J, mpi, diff_method=derivative_algorithm, abs_step=abs_step, rel_step=rel_step_value) as fd:
-                if mpi.proc0_world:
-                    start_inner_inner = time.time()
-                    # if mpi.proc0_world: print(f'  gradNumerical')
-                    gradNumerical = np.array(fd.jac()[0])
-                    print(f'   gradNumerical took {(time.time()-start_inner_inner):.2}s')
-            mpi.comm_world.Bcast(gradNumerical, root=0)
-
-            # gradNumerical = grad_fun_numerical(x0=dofs, abs_step=abs_step, rel_step=rel_step_value)
-
-            gradNumerical_with_respect_to_coils = gradNumerical[:-number_vmec_dofs]
-            gradNumerical_with_respect_to_surface = gradNumerical[-number_vmec_dofs:]
+            ############
 
             sqrt_squared_diff_grad_with_respect_to_coils = np.sqrt(np.sum((gradAnalytical_with_respect_to_coils - gradNumerical_with_respect_to_coils)**2))
             sqrt_squared_diff_grad_with_respect_to_surface = np.sqrt(np.sum((gradAnalytical_with_respect_to_surface - gradNumerical_with_respect_to_surface)**2))

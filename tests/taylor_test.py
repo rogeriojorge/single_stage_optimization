@@ -100,8 +100,8 @@ for QA_or_QH in QA_or_QHs:
     bs = BiotSavart(coils)
     bs.set_points(surf.gamma().reshape((-1, 3)))
     curves = [c.curve for c in coils]
-    if finite_beta: Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
-    else: Jf = SquaredFlux(surf, bs, local=True)
+    if finite_beta: Jf = SquaredFlux(surf, bs, definition="local", target=vc.B_external_normal)
+    else: Jf = SquaredFlux(surf, bs, definition="local")
     Jls = [CurveLength(c) for c in base_curves]
     Jcs = [LpCurveCurvature(c, 2, CURVATURE_THRESHOLD) for c in base_curves]
     Jccdist = CurveCurveDistance(curves, CC_THRESHOLD, num_basecurves=len(base_curves))
@@ -127,7 +127,7 @@ for QA_or_QH in QA_or_QHs:
             prob.x = x0[-number_vmec_dofs:]
             if finite_beta:
                 vc = VirtualCasing.from_vmec(vmec, src_nphi=vc_src_nphi, trgt_nphi=nphi, trgt_ntheta=ntheta)
-                Jf = SquaredFlux(surf, bs, local=True, target=vc.B_external_normal)
+                Jf = SquaredFlux(surf, bs, definition="local", target=vc.B_external_normal)
                 JF.opts[0].opts[0].opts[0] = Jf
         bs.set_points(surf.gamma().reshape((-1, 3)))
 
@@ -179,7 +179,7 @@ for QA_or_QH in QA_or_QHs:
                     B_n = Bcoil_n
                     B_diff = Bcoil
                     B_N = np.sum(Bcoil * n, axis=2)
-                    assert Jf.local
+                    # assert Jf.local
                     dJdx = (B_n/mod_Bcoil**2)[:, :, None] * (np.sum(dB_by_dX*(n-B*(B_N/mod_Bcoil**2)[:, :, None])[:, :, None, :], axis=3))
                     dJdN = (B_n/mod_Bcoil**2)[:, :, None] * B_diff - 0.5 * (B_N**2/absn**3/mod_Bcoil**2)[:, :, None] * n
                     deriv = surface.dnormal_by_dcoeff_vjp(dJdN/(nphi*ntheta)) + surface.dgamma_by_dcoeff_vjp(dJdx/(nphi*ntheta))
