@@ -382,7 +382,7 @@ if os.path.isfile(os.path.join(current_path, f"wout_final.nc")):
         pprint('Running BOOZ_XFORM')
         b1.run()
         if mpi.proc0_world:
-            b1.bx.write_boozmn(os.path.join(vmec_results_path,"boozmn_"+inputs.name+".nc"))
+            # b1.bx.write_boozmn(os.path.join(vmec_results_path,"boozmn_"+inputs.name+".nc"))
             pprint("Plot BOOZ_XFORM")
             import booz_xform as bx
             fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
