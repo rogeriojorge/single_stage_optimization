@@ -123,12 +123,12 @@ nphi = 50 # Toroidal resolution for the Biot-Savart magnetic field
 ntheta = 35 # Poloidal resolution for the Biot-Savart magnetic field
 LENGTH_CON_WEIGHT = 0.01 # Weight on the quadratic penalty for the curve length
 LENGTH_WEIGHT = 1e-7 # Weight on the curve lengths in the objective function
-CC_WEIGHT = 5e-1 # Weight for the coil-to-coil distance penalty in the objective function
+CC_WEIGHT = 3.6e+2 # Weight for the coil-to-coil distance penalty in the objective function
 CS_THRESHOLD = 0.3 # Threshold for the coil-to-surface distance penalty in the objective function
 CS_WEIGHT = 3e-1 # Weight for the coil-to-surface distance penalty in the objective function
-CURVATURE_WEIGHT = 1e-4 # Weight for the curvature penalty in the objective function
-MSC_WEIGHT = 1e-4 # Weight for the mean squared curvature penalty in the objective function
-ARCLENGTH_WEIGHT = 5e-8 # Weight for the arclength variation penalty in the objective function
+CURVATURE_WEIGHT = 1e-2 # Weight for the curvature penalty in the objective function
+MSC_WEIGHT = 2.8e-5 # Weight for the mean squared curvature penalty in the objective function
+ARCLENGTH_WEIGHT = 1e-9 # Weight for the arclength variation penalty in the objective function
 # Files and Folders
 executables_folder = "executables" # Directory where VMEC, BOOZ_XFORM, NEO executables are stored
 plotting_folder = "plotting" # Directory where the figures will be stored

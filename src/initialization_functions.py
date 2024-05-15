@@ -11,16 +11,7 @@ from simsopt.field import coils_via_symmetries
 from simsopt.field import Current, Coil, BiotSavart
 from simsopt.geo import create_equally_spaced_curves
 from simsopt.geo.curvexyzfourier import CurveXYZFourier
-# Define a print function that only prints on one processor
-try:
-    from mpi4py import MPI
-    comm = MPI.COMM_WORLD
-    def pprint(*args, **kwargs):
-        if comm.rank == 0:
-            print(*args, **kwargs)
-except ImportError:
-    comm = None
-    pprint = print
+from simsopt.util import proc0_print as pprint
 
 # Recalculate input parameters from command line arguments
 def recalculate_inputs(parser, QAQHQICNTselected, QAorQHorQIorCNT, sysargv):

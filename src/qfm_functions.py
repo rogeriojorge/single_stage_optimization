@@ -4,15 +4,12 @@ from math import ceil, sqrt
 import matplotlib.pyplot as plt
 
 # Define a print function that only prints on one processor
+from simsopt.util import proc0_print as pprint
 try:
     from mpi4py import MPI
     comm = MPI.COMM_WORLD
-    def pprint(*args, **kwargs):
-        if comm.rank == 0:
-            print(*args, **kwargs)
 except ImportError:
     comm = None
-    pprint = print
 
 def plot_qfm_poincare(phis, fieldlines_phi_hits, R, Z, OUT_DIR, name):
     if comm is None or comm.rank == 0:

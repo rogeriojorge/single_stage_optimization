@@ -14,7 +14,6 @@ import logging
 import argparse
 import numpy as np
 import pandas as pd
-import booz_xform as bx
 from pathlib import Path
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
@@ -26,7 +25,8 @@ from simsopt._core.finite_difference import MPIFiniteDifference
 from simsopt.geo import curves_to_vtk
 from src.vmecPlot2 import main as vmecPlot2_main
 from src.field_from_coils import main as field_from_coils_main
-from src.initialization_functions import (pprint, recalculate_inputs,
+from simsopt.util import proc0_print as pprint
+from src.initialization_functions import (recalculate_inputs,
                                      create_results_folders, create_initial_coils)
 from src.stage_1 import form_stage_1_objective_function
 from src.stage_2 import form_stage_2_objective_function, inner_coil_loop
@@ -384,6 +384,7 @@ if os.path.isfile(os.path.join(current_path, f"wout_final.nc")):
         if mpi.proc0_world:
             b1.bx.write_boozmn(os.path.join(vmec_results_path,"boozmn_"+inputs.name+".nc"))
             pprint("Plot BOOZ_XFORM")
+            import booz_xform as bx
             fig = plt.figure(); bx.surfplot(b1.bx, js=1,  fill=False, ncontours=35)
             plt.savefig(os.path.join(figures_results_path, "Boozxform_surfplot_1_"+inputs.name+'.pdf'), bbox_inches = 'tight', pad_inches = 0); plt.close()
             fig = plt.figure(); bx.surfplot(b1.bx, js=int(inputs.boozxform_nsurfaces/2), fill=False, ncontours=35)

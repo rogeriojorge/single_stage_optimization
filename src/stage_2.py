@@ -4,7 +4,7 @@ import pandas as pd
 from .initialization_functions import pprint
 import matplotlib.pyplot as plt
 from simsopt.geo import (CurveLength, CurveCurveDistance, MeanSquaredCurvature,
-                        LpCurveCurvature, ArclengthVariation)
+                        LpCurveCurvature, ArclengthVariation, LinkingNumber)
 from simsopt.objectives import SquaredFlux
 from simsopt.objectives import QuadraticPenalty
 from simsopt.geo import curves_to_vtk
@@ -47,10 +47,11 @@ def form_stage_2_objective_function(surf, bs, base_curves, curves, inputs):
         def dJ(self): return 0
     J_CURVATURE = inputs.CURVATURE_WEIGHT * sum(Jcs)
     J_ALS = inputs.ARCLENGTH_WEIGHT * sum(Jals)
+    linkNum = LinkingNumber(curves)
 
-    JF_simple = Jf + J_LENGTH_PENALTY + J_MSC + J_CC
+    JF_simple = Jf + J_LENGTH_PENALTY + J_MSC + J_CC + linkNum
 
-    JF = Jf + J_ALS + J_CC + J_CURVATURE + J_MSC + J_LENGTH_PENALTY# + J_LENGTH + J_CS
+    JF = Jf + J_ALS + J_CC + J_CURVATURE + J_MSC + J_LENGTH_PENALTY + linkNum# + J_LENGTH + J_CS
     
     return JF_simple, JF, Jls, Jmscs, Jccdist, Jcsdist(), Jf, J_LENGTH, J_CC, J_CS(), J_CURVATURE, J_MSC, J_ALS, J_LENGTH_PENALTY
 
